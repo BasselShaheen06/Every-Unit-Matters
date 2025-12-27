@@ -33,3 +33,21 @@ def emergencyOrder(n):
 
 def storage(n):
     return C_STORAGE*n
+
+def OptimalCost(demand):
+    dp = [[float('inf')] * (MAX_STORAGE + 1) for _ in range(T + 1)]
+    
+    # Base case: at time T, no cost regardless of inventory
+    for I in range(MAX_STORAGE + 1):
+        dp[T][I] = 0  # No cost at time 0
+        for t in range(T - 1, -1, -1):
+            for q in range(MAX_STORAGE - I + 1):  # feasible order quantities
+                available = I + q
+                shortage = max(0, demand[t] - available)
+                remaining_inventory = max(0, available - demand[t])
+                cost = normalOrder(q) + emergencyOrder(shortage) + storage(remaining_inventory) + dp[t + 1][remaining_inventory]
+                if cost < dp[t][I]:
+                    dp[t][I] = cost
+    return dp[0][0]  # Minimum cost starting with 0 inventory at time 0
+
+print(OptimalCost([50, 80, 60, 70, 90, 100, 110, 80, 60, 70, 90, 100]))
