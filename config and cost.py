@@ -19,7 +19,7 @@ C_EMERGENCY_UNIT = 60     # Emergency unit cost (6x regular price - premium supp
 # Capacity
 MAX_STORAGE = 500    # Maximum warehouse capacity (units)
 
-#Cost functions 
+#Cost functions
 def normalOrder(n):
     if n == 0:
         return 0
