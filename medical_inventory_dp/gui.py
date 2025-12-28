@@ -1,10 +1,3 @@
-#!/usr/bin/env python3
-"""
-Medical Inventory Optimization - GUI Interface
-===============================================
-Graphical interface for scenario selection and optimization.
-"""
-
 import tkinter as tk
 from tkinter import ttk, messagebox
 import os
