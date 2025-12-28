@@ -4,9 +4,6 @@ from .dp_solver import DPSolver
 def reconstruct_schedule(solver) -> list[int]:
     """
     Reconstruct the optimal ordering schedule from the DP solution.
-    
-    Args:
-        solver: Solved DPSolver instance
         
     Returns:
         List of optimal order quantities for each period
@@ -47,8 +44,7 @@ def compute_inventory_trajectory(schedule, demand, initial_inventory,  max_stora
         List of ending inventory levels for each period
     """
     T = len(schedule)
-    assert len(demand) == T # if this condition was not true, then the error will be raised
-    , "Schedule and demand must have same length" 
+    assert len(demand) == T , "Schedule and demand must have same length" 
     
     trajectory = []
     current_inventory = initial_inventory
