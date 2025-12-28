@@ -1,8 +1,3 @@
-# Visualization Module - Medical Supply Chain Inventory Optimization
-"""
-Creates visual outputs for inventory optimization results.
-"""
-
 import os
 from typing import Optional
 
@@ -27,16 +22,7 @@ def check_matplotlib():
 def plot_inventory_vs_time(inventory_levels: list[int], demand: list[int],
                             max_storage: int, output_path: Optional[str] = None,
                             title: str = "Inventory Levels Over Time"):
-    """
-    Plot inventory levels over the planning horizon.
-    
-    Args:
-        inventory_levels: Ending inventory for each period
-        demand: Demand for each period
-        max_storage: Maximum storage capacity
-        output_path: Path to save figure (optional)
-        title: Plot title
-    """
+
     check_matplotlib()
     
     T = len(inventory_levels)
@@ -82,12 +68,6 @@ def plot_orders_per_period(schedule: list[int], demand: list[int],
                            title: str = "Orders vs Demand per Period"):
     """
     Plot order quantities as a bar chart.
-    
-    Args:
-        schedule: Order quantities for each period
-        demand: Demand for each period
-        output_path: Path to save figure (optional)
-        title: Plot title
     """
     check_matplotlib()
     
@@ -136,11 +116,6 @@ def plot_cost_breakdown(cost_breakdown: dict, output_path: Optional[str] = None,
                         title: str = "Cost Breakdown"):
     """
     Plot cost breakdown as a pie chart.
-    
-    Args:
-        cost_breakdown: Dictionary with 'ordering', 'storage', 'shortage' costs
-        output_path: Path to save figure (optional)
-        title: Plot title
     """
     check_matplotlib()
     
@@ -188,11 +163,6 @@ def plot_combined_dashboard(solution: dict, output_path: Optional[str] = None,
                             title: str = "Inventory Optimization Dashboard"):
     """
     Create a combined dashboard with all visualizations.
-    
-    Args:
-        solution: Full solution dictionary from generate_solution_report
-        output_path: Path to save figure (optional)
-        title: Main title
     """
     check_matplotlib()
     
@@ -289,6 +259,134 @@ def plot_combined_dashboard(solution: dict, output_path: Optional[str] = None,
     
     fig.suptitle(title, fontsize=16, fontweight='bold', y=0.98)
     plt.tight_layout(rect=[0, 0, 1, 0.96])
+    
+    if output_path:
+        os.makedirs(os.path.dirname(output_path) or '.', exist_ok=True)
+        plt.savefig(output_path, dpi=150, bbox_inches='tight')
+        print(f"Saved: {output_path}")
+    
+    plt.close()
+    return fig
+
+
+def plot_decision_table(solution: dict, output_path=None,
+                        title: str = "Decision Table"):
+    """
+    Create a table image showing decisions per period.
+    """
+    check_matplotlib()
+    
+    schedule = solution['order_schedule']
+    inventory = solution['inventory_levels']
+    demand = solution['parameters']['demand']
+    shortages = solution.get('shortages', [0] * len(schedule))
+    
+    T = len(schedule)
+    
+    # Prepare table data
+    headers = ['Period', 'Demand', 'Order', 'Inventory', 'Shortage']
+    data = []
+    for t in range(T):
+        data.append([t+1, demand[t], schedule[t], inventory[t], shortages[t]])
+    
+    fig, ax = plt.subplots(figsize=(10, max(4, T * 0.5 + 2)))
+    ax.axis('off')
+    
+    table = ax.table(
+        cellText=data,
+        colLabels=headers,
+        cellLoc='center',
+        loc='center',
+        colColours=['#4CAF50'] * 5
+    )
+    
+    table.auto_set_font_size(False)
+    table.set_fontsize(11)
+    table.scale(1.2, 1.5)
+    
+    # Style header
+    for i in range(len(headers)):
+        table[(0, i)].set_text_props(weight='bold', color='white')
+    
+    ax.set_title(title, fontsize=14, fontweight='bold', pad=20)
+    
+    plt.tight_layout()
+    
+    if output_path:
+        os.makedirs(os.path.dirname(output_path) or '.', exist_ok=True)
+        plt.savefig(output_path, dpi=150, bbox_inches='tight')
+        print(f"Saved: {output_path}")
+    
+    plt.close()
+    return fig
+
+
+def plot_cost_table(solution: dict, output_path=None,
+                    title: str = "Cost Table Per Period"):
+    """
+    Create a table image showing costs per period.
+    """
+    check_matplotlib()
+    
+    schedule = solution['order_schedule']
+    inventory = solution['inventory_levels']
+    demand = solution['parameters']['demand']
+    shortages = solution.get('shortages', [0] * len(schedule))
+    costs = solution['parameters']['costs']
+    
+    T = len(schedule)
+    c_order = costs['c_order']
+    c_unit = costs.get('c_unit', 0)
+    c_storage = costs['c_storage']
+    c_shortage = costs['c_shortage']
+    
+    # Calculate costs per period
+    headers = ['Period', 'Order Cost', 'Storage Cost', 'Shortage Cost', 'Total']
+    data = []
+    for t in range(T):
+        q = schedule[t]
+        order_cost = (c_order + q * c_unit) if q > 0 else 0
+        storage_cost = inventory[t] * c_storage
+        shortage_cost = shortages[t] * c_shortage
+        total = order_cost + storage_cost + shortage_cost
+        data.append([t+1, f"${order_cost:.0f}", f"${storage_cost:.0f}", 
+                    f"${shortage_cost:.0f}", f"${total:.0f}"])
+    
+    # Add totals row
+    total_order = sum((c_order + schedule[t] * c_unit) if schedule[t] > 0 else 0 for t in range(T))
+    total_storage = sum(inventory[t] * c_storage for t in range(T))
+    total_shortage = sum(shortages[t] * c_shortage for t in range(T))
+    grand_total = total_order + total_storage + total_shortage
+    data.append(['TOTAL', f"${total_order:.0f}", f"${total_storage:.0f}",
+                f"${total_shortage:.0f}", f"${grand_total:.0f}"])
+    
+    fig, ax = plt.subplots(figsize=(12, max(4, (T+1) * 0.5 + 2)))
+    ax.axis('off')
+    
+    table = ax.table(
+        cellText=data,
+        colLabels=headers,
+        cellLoc='center',
+        loc='center',
+        colColours=['#2196F3'] * 5
+    )
+    
+    table.auto_set_font_size(False)
+    table.set_fontsize(11)
+    table.scale(1.2, 1.5)
+    
+    # Style header
+    for i in range(len(headers)):
+        table[(0, i)].set_text_props(weight='bold', color='white')
+    
+    # Style totals row
+    for i in range(len(headers)):
+        table[(T+1, i)].set_text_props(weight='bold')
+        table[(T+1, i)].set_facecolor('#FFE082')
+    
+    ax.set_title(title, fontsize=14, fontweight='bold', pad=20)
+    
+    plt.tight_layout()
     
     if output_path:
         os.makedirs(os.path.dirname(output_path) or '.', exist_ok=True)
