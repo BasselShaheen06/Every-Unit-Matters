@@ -79,10 +79,6 @@ medical_inventory_dp/
 │   ├── dp_solver.py       # DP table construction
 │   ├── backtracking.py    # Optimal schedule reconstruction
 │   └── visualization.py   # Charts and plots
-├── tests/
-│   ├── test_normal.py     # Normal demand tests
-│   ├── test_spike.py      # Demand spike tests
-│   └── test_extreme.py    # Edge case tests
 ├── data/
 │   └── scenarios.json     # Pre-defined scenarios
 ├── main.py                # CLI entry point
@@ -143,3 +139,4 @@ python -m pytest tests/test_normal.py -v
 ## License
 
 MIT License - Free for educational and commercial use.
+
