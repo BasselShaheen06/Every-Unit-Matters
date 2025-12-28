@@ -76,17 +76,16 @@ class DPSolver:
     
     def _get_future_cost(self, t, inventory):
         """
-        get the DP value for a future state.
-            
+        get the DP value for a future state.      
         returns:
-            DP value if computed, infinity otherwise
+            DP value
         """
         state = (t, inventory)
         if state in self.dp_table:
             return self.dp_table[state]
-        # If not computed yet, compute it (should be computed in backward pass)
-        return self._compute_dp(t, inventory)
-    
+        else:
+            assert "error in getting future cost"
+            return float('inf')
     def solve(self):
 
         # backward induction: start from period T-1 (0-indexed) to 0
@@ -100,28 +99,23 @@ class DPSolver:
 
     def get_optimal_decision(self, t, inventory):
         """
-        Get the optimal order quantity for a given state.
-        
-        Args:
-            t: Period
-            inventory: Inventory level
-            
-        Returns:
-            Optimal order quantity, or None if state not computed
+        get the optimal order quantity for a given state.
+
+        returns:
+            optimal order quantity
         """
         return self.decision_table.get((t, inventory))
     
-    def get_minimum_cost(self) -> float:
+    def get_minimum_cost(self):
         """
-        Get the minimum total cost.
+        get the minimum total cost.
         
-        Returns:
-            Minimum cost starting from initial inventory
+        returns:
+            minimum cost starting from initial inventory
         """
         if not self._solved:
             self.solve()
-        return self.dp_table.get((0, self.initial_inventory), float('inf'))
+        return self.dp_table.get((0, self.initial_inventory))
     
-    def is_solved(self) -> bool:
-        """Check if the DP has been solved."""
+    def is_solved(self):
         return self._solved
