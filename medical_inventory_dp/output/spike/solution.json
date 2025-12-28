@@ -1,0 +1,55 @@
+{
+  "order_schedule": [
+    0,
+    12,
+    45,
+    50,
+    30,
+    25,
+    0
+  ],
+  "inventory_levels": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    10,
+    0
+  ],
+  "shortages": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "total_cost": 270.0,
+  "cost_breakdown": {
+    "ordering": 250.0,
+    "storage": 20.0,
+    "shortage": 0.0,
+    "total": 270.0
+  },
+  "parameters": {
+    "T": 7,
+    "demand": [
+      10,
+      12,
+      45,
+      50,
+      30,
+      15,
+      10
+    ],
+    "initial_inventory": 10,
+    "max_storage": 60,
+    "costs": {
+      "c_order": 50,
+      "c_storage": 2,
+      "c_shortage": 30
+    }
+  }
+}
