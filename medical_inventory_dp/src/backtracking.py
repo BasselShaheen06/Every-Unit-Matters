@@ -1,16 +1,7 @@
-# Backtracking Module - Medical Supply Chain Inventory Optimization
-"""
-Reconstructs optimal ordering schedule from the DP solution.
-"""
-
-from typing import TYPE_CHECKING
 from .cost_model import CostModel
+from .dp_solver import DPSolver
 
-if TYPE_CHECKING:
-    from .dp_solver import DPSolver
-
-
-def reconstruct_schedule(solver: 'DPSolver') -> list[int]:
+def reconstruct_schedule(solver) -> list[int]:
     """
     Reconstruct the optimal ordering schedule from the DP solution.
     
@@ -23,7 +14,7 @@ def reconstruct_schedule(solver: 'DPSolver') -> list[int]:
     if not solver.is_solved():
         solver.solve()
     
-    schedule = []
+    schedule = [] # we will put the best order quantity for each period here
     current_inventory = solver.initial_inventory
     
     for t in range(solver.T):
@@ -41,30 +32,23 @@ def reconstruct_schedule(solver: 'DPSolver') -> list[int]:
         demand_t = solver.demand[t]
         
         if available >= demand_t:
-            current_inventory = min(available - demand_t, solver.max_storage)
+            current_inventory = available - demand_t
         else:
             current_inventory = 0
     
-    return schedule
+    return schedule # e.g [15, 10, 8]
 
 
-def compute_inventory_trajectory(schedule: list[int], demand: list[int], 
-                                  initial_inventory: int, 
-                                  max_storage: int) -> list[int]:
+def compute_inventory_trajectory(schedule, demand, initial_inventory,  max_storage) -> list[int]:
     """
     Compute inventory levels over time given an ordering schedule.
     
-    Args:
-        schedule: Order quantities for each period
-        demand: Demand for each period
-        initial_inventory: Starting inventory
-        max_storage: Maximum storage capacity
-        
     Returns:
         List of ending inventory levels for each period
     """
     T = len(schedule)
-    assert len(demand) == T, "Schedule and demand must have same length"
+    assert len(demand) == T # if this condition was not true, then the error will be raised
+    , "Schedule and demand must have same length" 
     
     trajectory = []
     current_inventory = initial_inventory
@@ -73,7 +57,7 @@ def compute_inventory_trajectory(schedule: list[int], demand: list[int],
         available = current_inventory + schedule[t]
         
         if available >= demand[t]:
-            ending_inventory = min(available - demand[t], max_storage)
+            ending_inventory = available - demand[t]
         else:
             ending_inventory = 0
         
@@ -83,16 +67,10 @@ def compute_inventory_trajectory(schedule: list[int], demand: list[int],
     return trajectory
 
 
-def compute_shortage_trajectory(schedule: list[int], demand: list[int],
-                                 initial_inventory: int) -> list[int]:
+def compute_shortage_trajectory(schedule, demand, initial_inventory) -> list[int]:
     """
     Compute shortages over time given an ordering schedule.
     
-    Args:
-        schedule: Order quantities for each period
-        demand: Demand for each period
-        initial_inventory: Starting inventory
-        
     Returns:
         List of shortage amounts for each period
     """
@@ -115,18 +93,9 @@ def compute_shortage_trajectory(schedule: list[int], demand: list[int],
     return shortages
 
 
-def compute_cost_breakdown(schedule: list[int], demand: list[int],
-                            initial_inventory: int, max_storage: int,
-                            cost_model: CostModel) -> dict:
+def compute_cost_breakdown(schedule, demand, initial_inventory, max_storage, cost_model) -> dict:
     """
     Compute detailed cost breakdown for a schedule.
-    
-    Args:
-        schedule: Order quantities for each period
-        demand: Demand for each period
-        initial_inventory: Starting inventory
-        max_storage: Maximum storage capacity
-        cost_model: CostModel instance
         
     Returns:
         Dictionary with ordering, storage, shortage costs and total
@@ -150,7 +119,7 @@ def compute_cost_breakdown(schedule: list[int], demand: list[int],
         available = current_inventory + q
         
         if available >= d:
-            ending_inventory = min(available - d, max_storage)
+            ending_inventory = available - d
             shortage = 0
         else:
             ending_inventory = 0
@@ -160,7 +129,7 @@ def compute_cost_breakdown(schedule: list[int], demand: list[int],
         total_storage += cost_model.compute_storage_cost(ending_inventory)
         total_shortage += cost_model.compute_shortage_cost(shortage)
         
-        current_inventory = ending_inventory
+        current_inventory = ending_inventory #update inventory for next period
     
     return {
         "ordering": total_ordering,
@@ -170,12 +139,9 @@ def compute_cost_breakdown(schedule: list[int], demand: list[int],
     }
 
 
-def generate_solution_report(solver: 'DPSolver') -> dict:
+def generate_solution_report(solver) -> dict:
     """
     Generate a complete solution report.
-    
-    Args:
-        solver: Solved DPSolver instance
         
     Returns:
         Dictionary with full solution details
