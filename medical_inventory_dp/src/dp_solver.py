@@ -2,12 +2,12 @@ from .cost_model import CostModel
 
 class DPSolver:
     """
-        T: Number of planning periods
-        demand: List of demand values for each period
-        max_storage: Maximum inventory capacity
-        cost_model: CostModel instance for cost calculations
-        dp_table: Memoization table for DP values
-        decision_table: Optimal decisions for each (t, I) state
+    Dynamic Programming solver for inventory optimization.
+    
+    COMPLEXITY ANALYSIS:
+        Time:  O(T * S * S) where T = periods, S = max_storage
+               - T periods × S inventory states × S order options per state
+        Space: O(T * S) for storing dp_table and decision_table
     """
     
     def __init__(self, T, demand, max_storage, cost_model, initial_inventory):
@@ -35,7 +35,12 @@ class DPSolver:
     
     def compute_dp(self, t, inventory):
         """ 
-        returns:
+        Compute DP value for state (t, inventory).
+        
+        Time Complexity: O(S) where S = max_storage (tries all order quantities)
+        Space Complexity: O(1) additional space
+        
+        Returns:
             minimum cost from period t to the end
         """
         state = (t, inventory)
@@ -87,7 +92,12 @@ class DPSolver:
             assert "error in getting future cost"
             return float('inf')
     def solve(self):
-
+        """
+        Solve using backward induction.
+        
+        Time Complexity: O(T * S * S) - main DP loop
+        Space Complexity: O(T * S) - stores all states
+        """
         # backward induction: start from period T-1 (0-indexed) to 0
         for t in range(self.T - 1, -1, -1): 
             for I in range(self.max_storage + 1):
@@ -99,9 +109,11 @@ class DPSolver:
 
     def get_optimal_decision(self, t, inventory):
         """
-        get the optimal order quantity for a given state.
-
-        returns:
+        Get the optimal order quantity for a given state.
+        
+        Time Complexity: O(1) - dictionary lookup
+        
+        Returns:
             optimal order quantity
         """
         return self.decision_table.get((t, inventory))
