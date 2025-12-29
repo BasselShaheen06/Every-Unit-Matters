@@ -255,12 +255,12 @@ class InventoryGUI(tk.Tk):
             self.log.insert(tk.END, "╔═══════════════════════════════════════════╗\n")
             self.log.insert(tk.END, "║        OPTIMIZATION RESULTS               ║\n")
             self.log.insert(tk.END, "╚═══════════════════════════════════════════╝\n\n")
-            self.log.insert(tk.END, f"✅ Optimal Total Cost: ${cost:,.2f}\n")
-            self.log.insert(tk.END, f"📊 Total Demand: {sum(demand):,} units\n")
-            self.log.insert(tk.END, f"📦 Total Ordered: {total_ordered:,} units\n")
-            self.log.insert(tk.END, f"🚨 Emergency Orders: {emergency_count} periods\n")
-            self.log.insert(tk.END, f"⚡ Emergency Units: {total_emergency:,} units\n")
-            self.log.insert(tk.END, f"💰 Average Cost/Period: ${cost/T:.2f}\n")
+            self.log.insert(tk.END, f" Optimal Total Cost: ${cost:,.2f}\n")
+            self.log.insert(tk.END, f" Total Demand: {sum(demand):,} units\n")
+            self.log.insert(tk.END, f" Total Ordered: {total_ordered:,} units\n")
+            self.log.insert(tk.END, f" Emergency Orders: {emergency_count} periods\n")
+            self.log.insert(tk.END, f" Emergency Units: {total_emergency:,} units\n")
+            self.log.insert(tk.END, f" Average Cost/Period: ${cost/T:.2f}\n")
             
             # Add efficiency metrics
             regular_orders = sum(1 for s in schedule if s["Order"] > 0)
