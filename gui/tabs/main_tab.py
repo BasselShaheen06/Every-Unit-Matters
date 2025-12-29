@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from tkinter.scrolledtext import ScrolledText
 from Utils.constant import (
     DEFAULT_DEMAND, 
@@ -33,7 +33,7 @@ class MainTab:
         frame = ttk.LabelFrame(self.frame, text="Inputs")
         frame.pack(fill="x", padx=10, pady=5)
 
-        # Time Horizon T (New Field)
+        # Time Horizon T
         ttk.Label(frame, text="Time Horizon (T):").grid(row=0, column=0, sticky="w")
         self.gui.t_entry = ttk.Entry(frame, width=10)
         self.gui.t_entry.insert(0, str(DEFAULT_T))
@@ -51,8 +51,8 @@ class MainTab:
         self.gui.init_inv.insert(0, str(DEFAULT_INITIAL_INVENTORY))
         self.gui.init_inv.grid(row=2, column=1, sticky="w")
 
-        # Run Button
-        ttk.Button(frame, text="Run Optimization", command=self.gui.run_solver)\
+        # Run Button (CHANGED command to validate_and_run)
+        ttk.Button(frame, text="Run Optimization", command=self.validate_and_run)\
             .grid(row=3, column=1, sticky="w", pady=5)
 
         # Costs
@@ -86,6 +86,67 @@ class MainTab:
         self.gui.max_storage.insert(0, str(DEFAULT_MAX_STORAGE))
         self.gui.max_storage.grid(row=9, column=1, sticky="w")
     
+    def validate_and_run(self):
+        """Validates all inputs before running the solver."""
+        try:
+            # 1. Validate Time Horizon (Positive Integer)
+            try:
+                t_val = int(self.gui.t_entry.get())
+                if t_val <= 0:
+                    raise ValueError
+            except ValueError:
+                raise ValueError("Time Horizon (T) must be a positive integer.")
+
+            # 2. Validate Demand (List of Non-Negative Integers)
+            try:
+                demands = [int(x.strip()) for x in self.gui.demand_entry.get().split(',')]
+                if any(d < 0 for d in demands):
+                    raise ValueError("Demand values cannot be negative.")
+                
+                if len(demands) != t_val:
+                    raise ValueError(f"Demand count ({len(demands)}) does not match Time Horizon T ({t_val}).")
+            except ValueError as e:
+                if "invalid literal" in str(e):
+                    raise ValueError("Demand must be a comma-separated list of integers.")
+                raise e
+
+            # 3. Validate Initial Inventory (Integer, Negative Allowed)
+            try:
+                int(self.gui.init_inv.get())
+            except ValueError:
+                raise ValueError("Initial Inventory must be an integer.")
+
+            # 4. Validate Costs (Non-Negative Floats)
+            cost_inputs = [
+                (self.gui.c_order_fixed, "Ordering Fixed Cost"),
+                (self.gui.c_unit, "Ordering Unit Cost"),
+                (self.gui.c_storage, "Storage Cost"),
+                (self.gui.c_emergency_fixed, "Emergency Fixed Cost"),
+                (self.gui.c_emergency_unit, "Emergency Unit Cost")
+            ]
+
+            for entry, name in cost_inputs:
+                try:
+                    val = float(entry.get())
+                    if val < 0:
+                        raise ValueError(f"{name} cannot be negative.")
+                except ValueError:
+                    raise ValueError(f"{name} must be a valid number.")
+
+            # 5. Validate Max Storage (Positive Integer)
+            try:
+                ms = int(self.gui.max_storage.get())
+                if ms <= 0:
+                    raise ValueError
+            except ValueError:
+                raise ValueError("Max Storage Capacity must be a positive integer.")
+
+            # If all validations pass, run the solver
+            self.gui.run_solver()
+
+        except ValueError as ve:
+            messagebox.showerror("Input Validation Error", str(ve))
+
     def build_table(self):
         frame = ttk.LabelFrame(self.frame, text="Optimal Schedule")
         frame.pack(fill="both", expand=True, padx=10, pady=5)
