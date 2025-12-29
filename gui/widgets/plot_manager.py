@@ -1,22 +1,11 @@
-"""
-Visualization and plotting functions for inventory optimization results.
-"""
-
 import numpy as np
 import matplotlib.pyplot as plt
 from tkinter import messagebox
-
 
 class PlotManager:
     """Manages all plotting and visualization for the inventory optimization system."""
     
     def __init__(self, parent_gui):
-        """
-        Initialize plot manager.
-        
-        Args:
-            parent_gui: Reference to parent InventoryGUI instance
-        """
         self.parent = parent_gui
     
     def check_data(self):
@@ -25,70 +14,98 @@ class PlotManager:
             messagebox.showwarning("Run Optimization", "Please run optimization first.")
             return False
         return True
-    
+
+    def _get_max_capacity(self):
+        """Helper to safely get max storage from the GUI input for scaling."""
+        try:
+            # Try to fetch from the Entry widget in the GUI
+            return int(self.parent.max_storage.get())
+        except (ValueError, AttributeError):
+            # Fallback: find the highest number in the current data
+            max_inv = 0
+            if self.parent.current_schedule:
+                max_inv = max(s['Start'] for s in self.parent.current_schedule)
+            return max(max_inv, 10) # Default minimum of 10
+
     def plot_demand(self):
         """Plot demand over time."""
-        if not self.check_data():
-            return
+        if not self.check_data(): return
+        
+        # FIX: Dynamic periods
+        demands = self.parent.current_demand
+        periods = range(1, len(demands) + 1)
             
         plt.figure()
-        plt.plot(self.parent.current_demand, marker="o")
+        plt.plot(periods, demands, marker="o")
         plt.title("Demand Over Time")
         plt.xlabel("Month")
         plt.ylabel("Units")
+        plt.xticks(periods)
         plt.grid(True)
         plt.show()
     
     def plot_inventory(self):
         """Plot inventory levels over time."""
-        if not self.check_data():
-            return
+        if not self.check_data(): return
             
         inventory = [s["Start"] for s in self.parent.current_schedule]
+        # Append end state for the step plot
         inventory.append(self.parent.current_schedule[-1]["End"])
-        
+        periods = range(1, len(inventory) + 1)
+
+        # Get max capacity for plotting limits
+        max_cap = self._get_max_capacity()
+
         plt.figure()
-        plt.step(range(len(inventory)), inventory, where="post")
-        plt.title("Inventory Level Over Time")
+        plt.step(periods, inventory, where="post")
+        
+        # FIX: Set Y-limit to show full warehouse capacity
+        plt.ylim(0, max_cap * 1.1) 
+        # Add a red dashed line for the ceiling
+        plt.axhline(y=max_cap, color='r', linestyle='--', label='Max Capacity')
+        
+        plt.title("Inventory Level vs Capacity")
         plt.xlabel("Month")
         plt.ylabel("Units")
+        plt.legend()
         plt.grid(True)
         plt.show()
     
     def plot_emergency(self):
         """Plot emergency orders over time."""
-        if not self.check_data():
-            return
+        if not self.check_data(): return
             
         emergency = [s["Emergency"] for s in self.parent.current_schedule]
+        periods = [s["Period"] for s in self.parent.current_schedule]
         
         plt.figure()
-        plt.bar(range(len(emergency)), emergency)
+        plt.bar(periods, emergency)
         plt.title("Emergency Orders Over Time")
         plt.xlabel("Month")
         plt.ylabel("Units")
+        plt.xticks(periods)
         plt.grid(True)
         plt.show()
     
     def plot_costs(self):
         """Plot costs per period."""
-        if not self.check_data():
-            return
+        if not self.check_data(): return
             
         costs = [s["Cost"] for s in self.parent.current_schedule]
+        periods = [s["Period"] for s in self.parent.current_schedule]
         
         plt.figure()
-        plt.plot(costs, marker="o")
+        plt.plot(periods, costs, marker="o")
         plt.title("Cost Per Period")
         plt.xlabel("Month")
         plt.ylabel("Cost ($)")
+        plt.xticks(periods)
         plt.grid(True)
         plt.show()
     
     def show_backtracking(self):
         """Visualize the backtracking path through the DP solution."""
-        if not self.check_data():
-            return
+        if not self.check_data(): return
         
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
         
@@ -96,10 +113,15 @@ class PlotManager:
         inventory_states = [s["Start"] for s in self.parent.current_schedule]
         orders = [s["Order"] for s in self.parent.current_schedule]
         
-        # Plot inventory states with order annotations
+        # 1. Plot Inventory Path
         ax1.plot(periods, inventory_states, 'o-', linewidth=2, markersize=8, 
                 label='Inventory State')
         
+        # FIX: Force Y-Axis to show up to Max Storage
+        max_cap = self._get_max_capacity()
+        ax1.set_ylim(0, max_cap * 1.1)
+        ax1.axhline(y=max_cap, color='r', linestyle='--', alpha=0.5, label='Capacity')
+
         for i, (p, inv, order) in enumerate(zip(periods, inventory_states, orders)):
             ax1.annotate(f'Order: {order}', 
                         xy=(p, inv), 
@@ -114,7 +136,7 @@ class PlotManager:
         ax1.grid(True, alpha=0.3)
         ax1.legend()
         
-        # Plot cumulative costs
+        # 2. Plot Cumulative Costs
         cumulative_costs = np.cumsum([s["Cost"] for s in self.parent.current_schedule])
         ax2.plot(periods, cumulative_costs, 's-', linewidth=2, markersize=8, 
                 color='red', label='Cumulative Cost')
@@ -136,8 +158,8 @@ class PlotManager:
         
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(14, 10))
         
-        from Utils.constant import T
-        periods = list(range(T))
+        # FIX: Remove dependency on constant T, use dynamic data length
+        periods = [s["Period"] for s in self.parent.current_schedule]
         
         # Plot 1: Cost per period
         dp_costs = [s["Cost"] for s in self.parent.current_schedule]
@@ -148,6 +170,7 @@ class PlotManager:
         ax1.set_xlabel('Period')
         ax1.set_ylabel('Cost ($)')
         ax1.set_title('Cost Per Period Comparison')
+        ax1.set_xticks(periods)
         ax1.legend()
         ax1.grid(True, alpha=0.3)
         
@@ -160,6 +183,7 @@ class PlotManager:
         ax2.set_xlabel('Period')
         ax2.set_ylabel('Cumulative Cost ($)')
         ax2.set_title('Cumulative Cost Comparison')
+        ax2.set_xticks(periods)
         ax2.legend()
         ax2.grid(True, alpha=0.3)
         
@@ -193,12 +217,12 @@ class PlotManager:
             sum(1 for s in self.parent.greedy_schedule if s["Emergency"] > 0)
         ]
         
-        x = np.arange(len(metrics))
-        ax4.bar(x - width/2, dp_metrics, width, label='DP', alpha=0.8)
-        ax4.bar(x + width/2, greedy_metrics, width, label='Greedy', alpha=0.8)
-        ax4.set_ylabel('Value')
+        x_metrics = np.arange(len(metrics))
+        ax4.bar(x_metrics - width/2, dp_metrics, width, label='DP', alpha=0.8)
+        ax4.bar(x_metrics + width/2, greedy_metrics, width, label='Greedy', alpha=0.8)
+        ax4.set_ylabel('Value (Cost Scaled /100)')
         ax4.set_title('Overall Metrics Comparison')
-        ax4.set_xticks(x)
+        ax4.set_xticks(x_metrics)
         ax4.set_xticklabels(metrics)
         ax4.legend()
         ax4.grid(True, alpha=0.3, axis='y')
