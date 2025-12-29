@@ -1,92 +1,163 @@
-# Every Unit Matters
+# Every Unit Matters 🏥
 
-A Dynamic Programming (DP) solution for optimizing medical supply inventory over a 12-month planning horizon. This tool determines the optimal ordering schedule to minimize total costs while handling complex constraints like delivery lead times and storage capacity.
+A **Dynamic Programming (DP) solution** for optimizing **medical supply inventory** over a T-months horizon. This tool computes the **optimal ordering schedule** to minimize total costs while respecting storage limits and handling emergency orders.
 
-## 📋 Project Overview
+---
 
-This application solves the **Single-Item Dynamic Lot Sizing Problem** with the following characteristics:
-* **Deterministic Demand:** Future demand is known for the 12-month period.
-* **3-Month Lead Time:** Orders placed in month `t` arrive in month `t+3`.
-* **Storage Constraints:** Warehouse capacity is strictly limited.
-* **Emergency Orders:** Immediate fulfillment options are available (at a premium) if shortages occur.
+## Overview
 
-The goal is to answer the question: *"How much should we order today to satisfy future demand at the lowest possible cost?"*
+Hospitals must balance **ordering enough to avoid shortages** while avoiding **overstocking** and excessive holding costs.
 
-## 🚀 Key Features
+This project addresses the **Single-Item Inventory Optimization Problem**:
 
-* **Recursive Dynamic Programming:** Uses memoization (`lru_cache`) to efficiently solve high-dimensional state spaces.
-* **Lead Time Handling:** Correctly models "pipeline inventory" (goods in transit) to ensure realistic planning.
-* **Interactive GUI:** Built with `tkinter` for easy input adjustment and visualization.
-* **Data Visualization:** Plots for Inventory Levels, Demand vs. Supply, and Cost Breakdown.
-* **Detailed Backtracking:** Provides a month-by-month table showing exactly what happens at every step (Orders, Arrivals, Emergencies, and End-of-Month Stock).
+* **Finite Horizon:** 12 months
+* **Deterministic Demand:** Known demand per month
+* **Storage Constraints:** Maximum inventory per month
+* **Emergency Orders:** Cover shortages at higher cost
 
-## ⚙️ Prerequisites
+> Key question: *“How much should we order each month to minimize total cost while avoiding shortages?”*
 
-You need **Python 3.x** installed. The project relies on the following standard libraries:
+---
 
-* `tkinter` (usually comes pre-installed with Python)
-* `numpy`
-* `matplotlib`
+## Our Approach 😎
 
-To install the dependencies:
+We used **Dynamic Programming** to explore all feasible inventory decisions while tracking:
+
+* **Inventory at the start of each month**
+* **Regular orders**
+* **End-of-month inventory**
+* **Emergency orders, if any**
+
+**DP Principle:** The optimal cost at any month depends on the **best possible decisions in future months**, giving **optimal substructure**.
+
+We also implemented a **Greedy baseline** that orders exactly the current demand each month (ignores future costs).
+
+---
+
+## System Model & Cost Function $
+
+For each month (t):
+
+1. **Regular Order Cost:** (C_{\text{order}} = c_\text{fixed} + c_\text{unit} \times q)
+2. **Storage Cost:** (C_{\text{holding}} = c_\text{storage} \times I_\text{end})
+3. **Emergency Cost:** (C_{\text{emergency}} = c_\text{emergency_fixed} + c_\text{emergency_unit} \times \text{shortage})
+
+**Inventory Dynamics:**
+
+[
+I_{t+1} = \max(0, I_t + q_t - D_t)
+]
+
+**Objective:** Minimize total cost over all months.
+
+---
+
+## Parameters & Inputs 
+
+| Parameter                | Description                     |
+| ------------------------ | ------------------------------- |
+| **T**                    | Number of periods (months)      |
+| **Demand**               | List of monthly demand values   |
+| **Initial Inventory**    | Stock on hand at month 0        |
+| **Max Storage**          | Maximum inventory allowed       |
+| **Order Fixed Cost**     | Fixed fee per order             |
+| **Order Unit Cost**      | Variable cost per unit          |
+| **Storage Cost / Unit**  | Cost per unit stored per month  |
+| **Emergency Fixed Cost** | Fixed cost for emergency orders |
+| **Emergency Unit Cost**  | Unit cost for emergency orders  |
+
+---
+
+## How to Run 🤔
+
+1. Clone/download the project.
+2. Make sure **Python 3.11.2** is installed or any version that is **3.8+** .
+3. Install dependencies:
+
 ```bash
-pip install numpy matplotlib
+pip install numpy matplotlib tkinter
 ```
 
-## 🏃 How to Run
-
-1.  Download the `optimum_Cost.py` file.
-2.  Run the script via terminal or command prompt:
+4. Run the script:
 
 ```bash
-python optimum_Cost.py
+python main.py
 ```
 
-3.  The GUI window will open.
-4.  Adjust inputs (optional) and click **"Run Optimization"**.
-5.  Wait for the solver to finish (approx. 30-60 seconds for complex states).
+5. The solver will return:
 
-## 🧠 The Mathematical Model
+   * Optimal DP schedule
+   * Greedy baseline schedule
+   * Total costs for both
+   * you can find multiple tabs as below where you can analyze and detect patterns & view behavior
 
-The solver uses a state-based recursion:
+---
 
-$$V(t, I, p_1, p_2, p_3)$$
+## Test Cases & Edge Scenarios 💀
 
-Where:
-* **$t$**: Current month (0-12).
-* **$I$**: Current on-hand inventory.
-* **$p_1, p_2, p_3$**: Pipeline inventory arriving in 1, 2, and 3 months respectively.
+Try these to validate behavior:
 
-### Cost Function
-For every month, the total cost is:
-$$Cost = C_{ordering}(q) + C_{holding}(I_{end}) + C_{emergency}(Shortage) + V(t+1, ...)$$
+1. **Zero Demand:** All months = 0 → no orders, no cost
+2. **Demand Exceeds Max Capacity:** DP places max regular order + emergency orders
+3. **Initial Inventory > Max Storage:** Algorithm should cap inventory
+4. **Extremely Low Max Capacity:** Frequent emergency orders
+5. **High Order Fixed Cost:** DP batches orders to reduce frequency
+6. **High Emergency Cost:** DP anticipates spikes, avoids emergencies
 
-## 📖 Usage Guide & Inputs
+> Placeholder: Add figures showing DP vs. Greedy for these cases
+> ![DP vs Greedy Placeholder](./figures/dp_vs_greedy.png)
 
-### Input Fields
-| Parameter | Description |
-| :--- | :--- |
-| **Ordering Costs** | Fixed fee per order + variable cost per unit. |
-| **Storage Cost** | Cost to hold one unit overnight. |
-| **Emergency Costs** | High premium costs for immediate, same-day delivery (used when stock runs out). |
-| **Max Storage** | Maximum capacity of the warehouse. **Note:** This limits *End-of-Month* inventory, not receiving capacity. |
-| **Demand** | Comma-separated list of demand for 12 months. |
-| **Initial Inventory** | Stock on hand at the start of Month 0. |
+---
 
-### Understanding the Output Table
-* **Start:** Total inventory available at the beginning of the month (Previous Inventory + Arriving Orders). *Note: This can exceed Max Storage because it includes goods that are immediately sold.*
-* **Order:** Quantity ordered *now*. Due to lead time, this arrives in 3 months.
-* **Emergency:** Units bought immediately at a premium price to cover shortages.
-* **End:** Inventory remaining overnight. This is strictly capped at **Max Storage**.
+## Output & Visualization 🎨
 
-## ⚠️ Performance Note
+Each schedule includes:
 
-Because this model accounts for a **3-month lead time**, the complexity is high (5-dimensional state space).
-* **Standard Run:** With Max Storage ~30, execution takes **30-60 seconds**.
-* **Fast Run:** To test logic quickly, reduce Max Storage to **15** and Demand values to single digits.
+| Column    | Meaning                                    |
+| --------- | ------------------------------------------ |
+| Start     | Inventory at start of month                |
+| Order     | Regular order placed                       |
+| Emergency | Units ordered immediately at premium price |
+| End       | Inventory at end of month                  |
+| Cost      | Total cost this month                      |
+
+> Placeholder: Inventory trajectory plot
+> ![Inventory Trajectory Placeholder](./figures/inventory_trajectory.png)
+
+> Placeholder: Cost breakdown plot
+> ![Cost Breakdown Placeholder](./figures/cost_breakdown.png)
+
+---
+
+## Performance Notes 📋
+
+* Complexity: (O(T \cdot N \cdot U)) where
+
+  * (T) = periods, (N) = max inventory states, (U) = feasible order quantities
+* Tractable for moderate storage and periods
+* Exhaustive DP ensures **globally optimal policy**
+
+---
 
 ## 🤝 Contributing
-This project is an educational tool for Operations Research and Industrial Engineering concepts. Feel free to fork and experiment with different cost functions or stochastic demand.
+
+Educational project for **Operations Research and Healthcare Inventory Optimization**.
+
+* Test new demand sequences
+* Modify costs and constraints
+* Compare DP with other heuristics
+
+---
+## Acknowledgement 🙏🏻
+* I would like to thank the whole team for their great work:
+Thanks to @Mohamed0Ehab & @WardSalkini and @AboSaree for building the core functionalities for this project, brainstorming different structures, late-night work that brought this thing to reality
+Special Thanks to my mate @Kareem-Taha-05 who always viewed things at micro-scale, whenever we are stuck he was the guy with the skillset to help
+
+Finally, I would like to thank Prof. Eman Ayman & Our TA Eng. Yara El-Shamy for Supervising this project and their Mentorship Throughout the Course. 
+
+---
 
 ## 📄 License
-Open Source.
+
+Open Source
+
