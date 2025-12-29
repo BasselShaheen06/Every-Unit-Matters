@@ -6,6 +6,12 @@ class PlotManager:
     """Manages all plotting and visualization for the inventory optimization system."""
     
     def __init__(self, parent_gui):
+        """
+        Initialize plot manager.
+        
+        Args:
+            parent_gui: Reference to parent InventoryGUI instance
+        """
         self.parent = parent_gui
     
     def check_data(self):
@@ -31,7 +37,6 @@ class PlotManager:
         """Plot demand over time."""
         if not self.check_data(): return
         
-        # FIX: Dynamic periods
         demands = self.parent.current_demand
         periods = range(1, len(demands) + 1)
             
@@ -59,9 +64,8 @@ class PlotManager:
         plt.figure()
         plt.step(periods, inventory, where="post")
         
-        # FIX: Set Y-limit to show full warehouse capacity
+        # Set Y-limit to show full warehouse capacity
         plt.ylim(0, max_cap * 1.1) 
-        # Add a red dashed line for the ceiling
         plt.axhline(y=max_cap, color='r', linestyle='--', label='Max Capacity')
         
         plt.title("Inventory Level vs Capacity")
@@ -104,49 +108,61 @@ class PlotManager:
         plt.show()
     
     def show_backtracking(self):
-        """Visualize the backtracking path through the DP solution."""
-        if not self.check_data(): return
-        
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
-        
-        periods = [s["Period"] for s in self.parent.current_schedule]
-        inventory_states = [s["Start"] for s in self.parent.current_schedule]
-        orders = [s["Order"] for s in self.parent.current_schedule]
-        
-        # 1. Plot Inventory Path
-        ax1.plot(periods, inventory_states, 'o-', linewidth=2, markersize=8, 
-                label='Inventory State')
-        
-        # FIX: Force Y-Axis to show up to Max Storage
-        max_cap = self._get_max_capacity()
-        ax1.set_ylim(0, max_cap * 1.1)
-        ax1.axhline(y=max_cap, color='r', linestyle='--', alpha=0.5, label='Capacity')
+        """Visualize the backtracking path: Start -> After Order -> End Inventory."""
+        if not self.check_data():
+            return
 
-        for i, (p, inv, order) in enumerate(zip(periods, inventory_states, orders)):
-            ax1.annotate(f'Order: {order}', 
-                        xy=(p, inv), 
-                        xytext=(10, 10), 
-                        textcoords='offset points',
-                        fontsize=8,
-                        bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.7))
+        fig, ax = plt.subplots(figsize=(12, 6))
+
+        # Access data from parent
+        schedule = self.parent.current_schedule
+        max_storage = self._get_max_capacity()
+
+        periods = [s["Period"] for s in schedule]
+        start_inv = [s["Start"] for s in schedule]
+        orders = [s["Order"] for s in schedule]
+        end_inv = [s["End"] for s in schedule]
         
-        ax1.set_xlabel('Period')
-        ax1.set_ylabel('Inventory Level')
-        ax1.set_title('Backtracking Path: Optimal Decisions')
-        ax1.grid(True, alpha=0.3)
-        ax1.legend()
-        
-        # 2. Plot Cumulative Costs
-        cumulative_costs = np.cumsum([s["Cost"] for s in self.parent.current_schedule])
-        ax2.plot(periods, cumulative_costs, 's-', linewidth=2, markersize=8, 
-                color='red', label='Cumulative Cost')
-        ax2.fill_between(periods, cumulative_costs, alpha=0.3, color='red')
-        ax2.set_xlabel('Period')
-        ax2.set_ylabel('Cumulative Cost ($)')
-        ax2.set_title('Cost Accumulation During Backtracking')
-        ax2.grid(True, alpha=0.3)
-        ax2.legend()
-        
+        # Calculate 'After Order' level (clamped by max storage for visualization)
+        after_order = [
+            min(s["Start"] + s["Order"], max_storage)
+            for s in schedule
+        ]
+
+        # Plot lines
+        ax.plot(periods, start_inv, 'o-', label='Start Inventory', linewidth=2, color='blue')
+        ax.plot(periods, after_order, 's-', label='After Order', linewidth=2, color='green')
+        ax.plot(periods, end_inv, '^-', label='End Inventory', linewidth=2, color='orange')
+
+        # Capacity line
+        ax.axhline(
+            max_storage,
+            linestyle='--',
+            color='red',
+            alpha=0.5,
+            label='Max Storage'
+        )
+
+        # Annotate orders
+        for i, (p, q) in enumerate(zip(periods, orders)):
+            if q > 0:
+                ax.annotate(
+                    f'+{q}',
+                    xy=(p, after_order[i]),
+                    xytext=(0, 10),
+                    textcoords='offset points',
+                    ha='center',
+                    fontsize=8,
+                    bbox=dict(boxstyle='round', facecolor='yellow', alpha=0.7)
+                )
+
+        ax.set_xlabel('Period')
+        ax.set_ylabel('Inventory Level')
+        ax.set_title('DP Backtracking Path (Start → Order → End)')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+        ax.set_ylim(bottom=0)  # Ensure y-axis starts at 0
+
         plt.tight_layout()
         plt.show()
     
@@ -158,7 +174,6 @@ class PlotManager:
         
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(14, 10))
         
-        # FIX: Remove dependency on constant T, use dynamic data length
         periods = [s["Period"] for s in self.parent.current_schedule]
         
         # Plot 1: Cost per period
