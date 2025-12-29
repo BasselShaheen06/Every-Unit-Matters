@@ -4,7 +4,7 @@ InitialInventory: 0
 MaxCapacity: 500
 OrderFixedCost: 100
 OrderUnitCost: 10
-HoldingCostPerUnit: 2
+Storage Cost / Unit: 2
 EmergencyFixedCost: 150
 EmergencyUnitCost: 60
 DemandSequence: 80, 120, 100, 90, 150, 130, 110, 140, 100, 120, 90, 110

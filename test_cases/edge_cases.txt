@@ -1,0 +1,131 @@
+## Here we designed some test cases that may or may not push our algorithm to bad behavior
+## in some of them we observed that DP & Greedy act the same, and this mainly depends on initial
+## inventory levels or our Max Capacity, in other the DP shows significant optimization
+
+# Edge Case 1: Zero Demand
+T: 12
+InitialInventory: 0
+MaxCapacity: 500
+OrderFixedCost: 100
+OrderUnitCost: 10
+StorageCostPerUnit: 2
+EmergencyFixedCost: 150
+EmergencyUnitCost: 60
+DemandSequence: 0,0,0,0,0,0,0,0,0,0,0,0
+
+# How our Algorithm should behave?
+# No regular orders; inventory remains zero; no emergency orders.
+
+--------------------------------------------------------
+
+# Edge Case 2: Demand Exceeds Max Capacity
+T: 12
+InitialInventory: 0
+MaxCapacity: 500
+OrderFixedCost: 100
+OrderUnitCost: 10
+StorageCostPerUnit: 2
+EmergencyFixedCost: 150
+EmergencyUnitCost: 60
+DemandSequence: 80,120,600,90,150,130,110,140,100,120,90,110
+
+# How our Algorithm should behave?
+# DP places max regular order (500); remaining demand covered by emergency order.
+# Greedy triggers even more emergency orders if not anticipating spike.
+
+--------------------------------------------------------
+
+# Edge Case 3: Initial Inventory Exceeds Max Capacity
+T: 12
+InitialInventory: 600
+MaxCapacity: 500
+OrderFixedCost: 100
+OrderUnitCost: 10
+StorageCostPerUnit: 2
+EmergencyFixedCost: 150
+EmergencyUnitCost: 60
+DemandSequence: 80,120,100,90,150,130,110,140,100,120,90,110
+
+# How our Algorithm should behave?
+# Algorithm should cap inventory at 500 or raise warning/error.
+
+--------------------------------------------------------
+
+# Edge Case 4: Extremely Low Max Capacity
+T: 12
+InitialInventory: 0
+MaxCapacity: 50
+OrderFixedCost: 100
+OrderUnitCost: 10
+StorageCostPerUnit: 2
+EmergencyFixedCost: 150
+EmergencyUnitCost: 60
+DemandSequence: 80,120,100,90,150,130,110,140,100,120,90,110
+
+# How our Algorithm should behave?
+# Frequent emergency orders unavoidable; DP tries to minimize total cost while respecting capacity.
+
+--------------------------------------------------------
+
+# Edge Case 5: High Holding Cost
+T: 12
+InitialInventory: 50
+MaxCapacity: 500
+OrderFixedCost: 100
+OrderUnitCost: 10
+StorageCostPerUnit: 50
+EmergencyFixedCost: 150
+EmergencyUnitCost: 60
+DemandSequence: 80,120,100,90,150,130,110,140,100,120,90,110
+
+# How our Algorithm should behave?
+# DP avoids accumulating inventory; orders just-in-time to minimize holding costs.
+
+--------------------------------------------------------
+
+# Edge Case 6: High Fixed Order Cost
+T: 12
+InitialInventory: 0
+MaxCapacity: 500
+OrderFixedCost:     
+OrderUnitCost: 10
+StorageCostPerUnit: 2
+EmergencyFixedCost: 150
+EmergencyUnitCost: 60
+DemandSequence: 80,120,100,90,150,130,110,140,100,120,90,110
+
+# How our Algorithm should behave?
+# DP batches orders into fewer periods to reduce fixed costs; holding cost may increase slightly.
+
+--------------------------------------------------------
+
+# Edge Case 7: High Emergency Cost
+T: 12
+InitialInventory: 0
+MaxCapacity: 500
+OrderFixedCost: 100
+OrderUnitCost: 10
+StorageCostPerUnit: 2
+EmergencyFixedCost: 1000
+EmergencyUnitCost: 500
+DemandSequence: 80,120,100,90,150,130,110,140,100,120,90,110
+
+# How our Algorithm should behave?
+# DP proactively orders ahead within capacity to avoid expensive emergency orders; greedy triggers more emergencies.
+
+--------------------------------------------------------
+
+# Edge Case 8: Zero/Negative Costs
+T: 12
+InitialInventory: 0
+MaxCapacity: 500
+OrderFixedCost: 0
+OrderUnitCost: 0
+StorageCostPerUnit: 0
+EmergencyFixedCost: 0
+EmergencyUnitCost: 0
+DemandSequence: 80,120,100,90,150,130,110,140,100,120,90,110
+
+# How our Algorithm should behave?
+# DP should still produce a valid schedule; total cost is zero; ensures no errors occur in degenerate cost cases.
+# DP and Greedy behave the same

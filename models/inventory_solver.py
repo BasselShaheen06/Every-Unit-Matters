@@ -122,7 +122,7 @@ class InventoryDPSolver:
         
         for t in range(self.T):
             d = self.demand[t]
-            q = d
+            q = min(d, self.max_storage - I)
             inv = I + q
             
             cost = self.normal_order_cost(q)
