@@ -97,6 +97,13 @@ class MainTab:
         Strictly enforces that demand length is T (12) and values are non-negative.
         """
         try:
+            # initial inventory if greater than max_capacity
+            try:
+                init_inv = self.gui.init_inv.get()
+                if int(init_inv) > int(self.gui.max_storage.get()):
+                    raise ValueError("Initial Inventory cannot exceed Max Storage Capacity.")
+            except ValueError:
+                raise ValueError("Initial Inventory must be valid")
             # 1. Parse Demand
             try:
                 raw_text = self.gui.demand_entry.get().split(',')
