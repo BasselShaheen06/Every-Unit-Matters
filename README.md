@@ -99,7 +99,7 @@ Try these to validate behavior:
 
 1. **Zero Demand:** All months = 0 → no orders, no cost
 2. **Demand Exceeds Max Capacity:** DP places max regular order + emergency orders
-3. **Initial Inventory > Max Storage:** Algorithm should cap inventory
+3. **Initial Inventory > Max Storage:** Algorithm should Raise Error in Terminal
 4. **Extremely Low Max Capacity:** Frequent emergency orders
 5. **High Order Fixed Cost:** DP batches orders to reduce frequency
 6. **High Emergency Cost @max_capacity > Highest Demand:** DP anticipates spikes, avoids emergencies
