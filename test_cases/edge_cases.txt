@@ -87,7 +87,7 @@ DemandSequence: 80,120,100,90,150,130,110,140,100,120,90,110
 T: 12
 InitialInventory: 0
 MaxCapacity: 500
-OrderFixedCost:     
+OrderFixedCost: 1000
 OrderUnitCost: 10
 StorageCostPerUnit: 2
 EmergencyFixedCost: 150
@@ -99,19 +99,21 @@ DemandSequence: 80,120,100,90,150,130,110,140,100,120,90,110
 
 --------------------------------------------------------
 
-# Edge Case 7: High Emergency Cost
+# Edge Case 7: DP Advantage Over Greedy
 T: 12
-InitialInventory: 0
-MaxCapacity: 500
-OrderFixedCost: 100
-OrderUnitCost: 10
-StorageCostPerUnit: 2
-EmergencyFixedCost: 1000
-EmergencyUnitCost: 500
-DemandSequence: 80,120,100,90,150,130,110,140,100,120,90,110
+InitialInventory: 20
+MaxCapacity: 100
+OrderFixedCost: 50
+OrderUnitCost: 5
+StorageCostPerUnit: 1
+EmergencyFixedCost: 1000   # very high
+EmergencyUnitCost: 500     # very high
+DemandSequence: 30, 40, 90, 20, 70, 100, 10, 50, 30, 80, 20, 60
 
 # How our Algorithm should behave?
-# DP proactively orders ahead within capacity to avoid expensive emergency orders; greedy triggers more emergencies.
+# - DP pre-orders in months 1–2 to build inventory for months with spikes (month 3: 160, month 6: 180), staying within MaxCapacity.
+# - Greedy orders exactly demand each month → cannot accumulate enough stock before spikes → triggers expensive emergency orders in months 3 and 6.
+# - Total cost for DP < Greedy due to avoided emergency orders.
 
 --------------------------------------------------------
 

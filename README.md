@@ -102,10 +102,15 @@ Try these to validate behavior:
 3. **Initial Inventory > Max Storage:** Algorithm should cap inventory
 4. **Extremely Low Max Capacity:** Frequent emergency orders
 5. **High Order Fixed Cost:** DP batches orders to reduce frequency
-6. **High Emergency Cost:** DP anticipates spikes, avoids emergencies
+6. **High Emergency Cost @max_capacity > Highest Demand:** DP anticipates spikes, avoids emergencies
 
 > Placeholder: Add figures showing DP vs. Greedy for these cases
-> ![DP vs Greedy Placeholder](./figures/dp_vs_greedy.png)
+> ![1. Zero Demand](./plots/ZeroDemand_DPvsGreedy.png)
+> ![2. Demand Exceeds Max Capacity](./plots/DemandExceedsMaxCap_DPvsGreedy.png)
+> ![3. ](./plots/InventoryGreaterThanMaxCap.png)
+> ![4. ](./plots/LowMaxCap_DPvsGreeedy.png)
+> ![5. ](./plots/HighOrderCost_DPvsGreedy.png)
+> ![6. ](./plots/)
 
 ---
 
@@ -153,7 +158,7 @@ Educational project for **Operations Research and Healthcare Inventory Optimizat
 Thanks to @Mohamed0Ehab & @WardSalkini and @AboSaree for building the core functionalities for this project, brainstorming different structures, late-night work that brought this thing to reality
 Special Thanks to my mate @Kareem-Taha-05 who always viewed things at micro-scale, whenever we are stuck he was the guy with the skillset to help
 
-Finally, I would like to thank Prof. Eman Ayman & Our TA Eng. Yara El-Shamy for Supervising this project and their Mentorship Throughout the Course. 
+Finally, I would like to thank Prof. Eman Ayman & Our TA Eng. @yaraelshamy for Supervising this project and their Mentorship Throughout the Course. 
 
 ---
 
