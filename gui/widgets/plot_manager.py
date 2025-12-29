@@ -1,47 +1,33 @@
 """
-Visualization and plotting functions with comprehensive error handling.
+Visualization and plotting functions for inventory optimization results.
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
 from tkinter import messagebox
-from Utils.constant import T
+
 
 class PlotManager:
-    """Manages all plotting and visualization with error handling."""
+    """Manages all plotting and visualization for the inventory optimization system."""
     
     def __init__(self, parent_gui):
+        """
+        Initialize plot manager.
+        
+        Args:
+            parent_gui: Reference to parent InventoryGUI instance
+        """
         self.parent = parent_gui
     
     def check_data(self):
         """Verify that optimization has been run before plotting."""
         if self.parent.current_schedule is None:
-            messagebox.showwarning("No Data", "Please run optimization first.")
+            messagebox.showwarning("Run Optimization", "Please run optimization first.")
             return False
-        
-        if len(self.parent.current_schedule) == 0:
-            messagebox.showwarning("No Data", "Schedule is empty.")
-            return False
-        
         return True
     
-    def safe_plot(self, plot_function, error_title="Plot Error"):
-        """
-        Wrapper for safe plotting with error handling.
-        
-        Args:
-            plot_function: Function that creates the plot
-            error_title: Title for error dialog
-        """
-        try:
-            plot_function()
-        except Exception as e:
-            error_msg = f"Failed to create plot:\n{str(e)}"
-            messagebox.showerror(error_title, error_msg)
-            traceback.print_exc()
-    
     def plot_demand(self):
-        """Plot demand over time with error handling."""
+        """Plot demand over time."""
         if not self.check_data():
             return
             
@@ -54,7 +40,7 @@ class PlotManager:
         plt.show()
     
     def plot_inventory(self):
-        """Plot inventory levels with error handling."""
+        """Plot inventory levels over time."""
         if not self.check_data():
             return
             
@@ -70,7 +56,7 @@ class PlotManager:
         plt.show()
     
     def plot_emergency(self):
-        """Plot emergency orders with error handling."""
+        """Plot emergency orders over time."""
         if not self.check_data():
             return
             
@@ -85,7 +71,7 @@ class PlotManager:
         plt.show()
     
     def plot_costs(self):
-        """Plot costs per period with error handling."""
+        """Plot costs per period."""
         if not self.check_data():
             return
             
@@ -100,81 +86,60 @@ class PlotManager:
         plt.show()
     
     def show_backtracking(self):
-        """Visualize backtracking path with error handling."""
+        """Visualize the backtracking path through the DP solution."""
         if not self.check_data():
             return
         
-        def create_plot():
-            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
-            
-            periods = [s["Period"] for s in self.parent.current_schedule]
-            inventory_states = [s["Start"] for s in self.parent.current_schedule]
-            orders = [s["Order"] for s in self.parent.current_schedule]
-            
-            if len(periods) == 0:
-                raise ValueError("No backtracking data available")
-            
-            # Plot 1: Inventory states with orders
-            ax1.plot(periods, inventory_states, 'o-', linewidth=2, markersize=8, 
-                    label='Inventory State')
-            
-            for i, (p, inv, order) in enumerate(zip(periods, inventory_states, orders)):
-                if order > 0:
-                    ax1.annotate(f'Order: {order}', 
-                                xy=(p, inv), 
-                                xytext=(10, 10), 
-                                textcoords='offset points',
-                                fontsize=8,
-                                bbox=dict(boxstyle='round,pad=0.3', 
-                                        facecolor='yellow', alpha=0.7),
-                                arrowprops=dict(arrowstyle='->', 
-                                              connectionstyle='arc3,rad=0'))
-            
-            ax1.set_xlabel('Period', fontsize=12)
-            ax1.set_ylabel('Inventory Level', fontsize=12)
-            ax1.set_title('Backtracking Path: Optimal Decisions', 
-                         fontsize=14, fontweight='bold')
-            ax1.grid(True, alpha=0.3)
-            ax1.legend()
-            
-            # Plot 2: Cumulative costs
-            cumulative_costs = np.cumsum([s["Cost"] for s in self.parent.current_schedule])
-            ax2.plot(periods, cumulative_costs, 's-', linewidth=2, markersize=8, 
-                    color='red', label='Cumulative Cost')
-            ax2.fill_between(periods, cumulative_costs, alpha=0.3, color='red')
-            ax2.set_xlabel('Period', fontsize=12)
-            ax2.set_ylabel('Cumulative Cost ($)', fontsize=12)
-            ax2.set_title('Cost Accumulation During Backtracking', 
-                         fontsize=14, fontweight='bold')
-            ax2.grid(True, alpha=0.3)
-            ax2.legend()
-            
-            # Add final cost annotation
-            final_cost = cumulative_costs[-1]
-            ax2.text(0.98, 0.02, f'Total: ${final_cost:,.2f}', 
-                    transform=ax2.transAxes, 
-                    horizontalalignment='right',
-                    verticalalignment='bottom',
-                    bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.7),
-                    fontsize=11, fontweight='bold')
-            
-            plt.tight_layout()
-            plt.show()
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
         
-        self.safe_plot(create_plot, "Backtracking Visualization Error")
+        periods = [s["Period"] for s in self.parent.current_schedule]
+        inventory_states = [s["Start"] for s in self.parent.current_schedule]
+        orders = [s["Order"] for s in self.parent.current_schedule]
+        
+        # Plot inventory states with order annotations
+        ax1.plot(periods, inventory_states, 'o-', linewidth=2, markersize=8, 
+                label='Inventory State')
+        
+        for i, (p, inv, order) in enumerate(zip(periods, inventory_states, orders)):
+            ax1.annotate(f'Order: {order}', 
+                        xy=(p, inv), 
+                        xytext=(10, 10), 
+                        textcoords='offset points',
+                        fontsize=8,
+                        bbox=dict(boxstyle='round,pad=0.3', facecolor='yellow', alpha=0.7))
+        
+        ax1.set_xlabel('Period')
+        ax1.set_ylabel('Inventory Level')
+        ax1.set_title('Backtracking Path: Optimal Decisions')
+        ax1.grid(True, alpha=0.3)
+        ax1.legend()
+        
+        # Plot cumulative costs
+        cumulative_costs = np.cumsum([s["Cost"] for s in self.parent.current_schedule])
+        ax2.plot(periods, cumulative_costs, 's-', linewidth=2, markersize=8, 
+                color='red', label='Cumulative Cost')
+        ax2.fill_between(periods, cumulative_costs, alpha=0.3, color='red')
+        ax2.set_xlabel('Period')
+        ax2.set_ylabel('Cumulative Cost ($)')
+        ax2.set_title('Cost Accumulation During Backtracking')
+        ax2.grid(True, alpha=0.3)
+        ax2.legend()
+        
+        plt.tight_layout()
+        plt.show()
     
     def plot_comparison(self):
-        """Plot DP vs Greedy comparison with error handling."""
+        """Plot comprehensive comparison between DP and Greedy approaches."""
         if self.parent.greedy_schedule is None:
-            messagebox.showwarning("No Data", 
-                                 "Greedy solution not available. Please run optimization first.")
+            messagebox.showwarning("No Data", "Please run optimization first.")
             return
         
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(14, 10))
         
+        from Utils.constant import T
         periods = list(range(T))
         
-        # Cost per period
+        # Plot 1: Cost per period
         dp_costs = [s["Cost"] for s in self.parent.current_schedule]
         greedy_costs = [s["Cost"] for s in self.parent.greedy_schedule]
         
@@ -186,7 +151,7 @@ class PlotManager:
         ax1.legend()
         ax1.grid(True, alpha=0.3)
         
-        # Cumulative cost
+        # Plot 2: Cumulative cost
         dp_cumulative = np.cumsum(dp_costs)
         greedy_cumulative = np.cumsum(greedy_costs)
         
@@ -198,7 +163,7 @@ class PlotManager:
         ax2.legend()
         ax2.grid(True, alpha=0.3)
         
-        # Orders per period
+        # Plot 3: Orders per period
         dp_orders = [s["Order"] for s in self.parent.current_schedule]
         greedy_orders = [s["Order"] for s in self.parent.greedy_schedule]
         
@@ -215,10 +180,10 @@ class PlotManager:
         ax3.legend()
         ax3.grid(True, alpha=0.3, axis='y')
         
-        # Summary metrics
+        # Plot 4: Summary bar chart
         metrics = ['Total Cost', 'Num Orders', 'Emergencies']
         dp_metrics = [
-            self.parent.current_cost / 100,
+            self.parent.current_cost / 100,  # Scale for visibility
             sum(1 for s in self.parent.current_schedule if s["Order"] > 0),
             sum(1 for s in self.parent.current_schedule if s["Emergency"] > 0)
         ]
