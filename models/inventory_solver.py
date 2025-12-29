@@ -38,30 +38,49 @@ class InventoryDPSolver:
         return self.c_storage * n
 
     def solve(self):
-        """Solve using Dynamic Programming."""
-        INF = float('inf')
-        self.dp = np.full((self.T + 1, self.max_storage + 1), INF)
-        self.decision = np.zeros((self.T + 1, self.max_storage + 1), dtype=int)
-        
-        # Terminal condition
-        self.dp[self.T, :] = 0
+            """Solve using Dynamic Programming."""
+            INF = float('inf')
+            # Initialize DP table with infinity; this helps identify unreachable states later
+            self.dp = np.full((self.T + 1, self.max_storage + 1), INF)
+            self.decision = np.zeros((self.T + 1, self.max_storage + 1), dtype=int)
+            
+            # Terminal condition: After time T, there are no future costs
+            self.dp[self.T, :] = 0
 
-        # Backward induction
-        for t in range(self.T - 1, -1, -1):
-            for I in range(self.max_storage + 1):
-                best = INF
-                best_q = 0
-                
-                for q in range(self.max_storage - I + 1):
-                    cost, nxt = self._period_cost(I, q, t)
-                    val = cost + self.dp[t + 1, nxt]
+            # Backward induction: Solve from period T-1 down to 0
+            for t in range(self.T - 1, -1, -1):
+                current_demand = self.demand[t]
+
+                for I in range(self.max_storage + 1):
+                    best = INF
+                    best_q = 0
                     
-                    if val < best:
-                        best = val
-                        best_q = q
+                    # Instead of hard-capping (I + q <= max_storage), I expanded the search space.
+                    # We can physically receive a large order (throughput) as long as we sell 
+                    # enough to fit the remainder in storage overnight.
+                    # So, max possible order is Demand + Space Available.
+                    max_order = current_demand + self.max_storage - I
+                    
+                    # Sanity check to ensure range doesn't break if I > Demand + Max
+                    max_order = max(0, max_order)
+
+                    for q in range(max_order + 1):
+                        cost, nxt = self._period_cost(I, q, t)
                         
-                self.dp[t, I] = best
-                self.decision[t, I] = best_q
+                        # critical constraint here:
+                        # The storage limit applies to 'nxt' (Ending Inventory).
+                        # If the leftover stock exceeds capacity, this path is impossible.
+                        if nxt > self.max_storage:
+                            continue
+                        
+                        val = cost + self.dp[t + 1, nxt]
+                        
+                        if val < best:
+                            best = val
+                            best_q = q
+                            
+                    self.dp[t, I] = best
+                    self.decision[t, I] = best_q
 
     def _period_cost(self, I, q, t):
         """Calculate cost for a single period."""

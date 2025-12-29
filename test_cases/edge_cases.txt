@@ -106,9 +106,9 @@ MaxCapacity: 100
 OrderFixedCost: 50
 OrderUnitCost: 5
 StorageCostPerUnit: 1
-EmergencyFixedCost: 1000   # very high
-EmergencyUnitCost: 500     # very high
-DemandSequence: 30, 40, 90, 20, 70, 100, 10, 50, 30, 80, 20, 60
+EmergencyFixedCost: 1000  
+EmergencyUnitCost: 500
+DemandSequence: 30, 40, 160, 20, 70, 180, 10, 50, 30, 80, 20, 60
 
 # How our Algorithm should behave?
 # - DP pre-orders in months 1–2 to build inventory for months with spikes (month 3: 160, month 6: 180), staying within MaxCapacity.
