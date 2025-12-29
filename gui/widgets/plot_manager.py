@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from tkinter import messagebox
-from Utils.constant import T
 
 class PlotManager:
     """Manages all plotting and visualization."""
@@ -21,11 +20,16 @@ class PlotManager:
         if not self.check_data():
             return
             
+        # FIX: Generate periods dynamically based on data length
+        demands = self.parent.current_demand
+        periods = range(1, len(demands) + 1)
+
         plt.figure()
-        plt.plot(self.parent.current_demand, marker="o")
+        plt.plot(periods, demands, marker="o")
         plt.title("Demand Over Time")
         plt.xlabel("Month")
         plt.ylabel("Units")
+        plt.xticks(periods)  # Ensure integer ticks
         plt.grid(True)
         plt.show()
     
@@ -35,10 +39,11 @@ class PlotManager:
             return
             
         inventory = [s["Start"] for s in self.parent.current_schedule]
+        # Append the final end inventory for the step plot
         inventory.append(self.parent.current_schedule[-1]["End"])
         
         plt.figure()
-        plt.step(range(len(inventory)), inventory, where="post")
+        plt.step(range(1, len(inventory) + 1), inventory, where="post")
         plt.title("Inventory Level Over Time")
         plt.xlabel("Month")
         plt.ylabel("Units")
@@ -51,12 +56,14 @@ class PlotManager:
             return
             
         emergency = [s["Emergency"] for s in self.parent.current_schedule]
+        periods = [s["Period"] for s in self.parent.current_schedule]
         
         plt.figure()
-        plt.bar(range(len(emergency)), emergency)
+        plt.bar(periods, emergency)
         plt.title("Emergency Orders Over Time")
         plt.xlabel("Month")
         plt.ylabel("Units")
+        plt.xticks(periods)
         plt.grid(True)
         plt.show()
     
@@ -66,12 +73,14 @@ class PlotManager:
             return
             
         costs = [s["Cost"] for s in self.parent.current_schedule]
+        periods = [s["Period"] for s in self.parent.current_schedule]
         
         plt.figure()
-        plt.plot(costs, marker="o")
+        plt.plot(periods, costs, marker="o")
         plt.title("Cost Per Period")
         plt.xlabel("Month")
         plt.ylabel("Cost ($)")
+        plt.xticks(periods)
         plt.grid(True)
         plt.show()
     
@@ -124,7 +133,8 @@ class PlotManager:
         
         fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(14, 10))
         
-        periods = list(range(T))
+        # FIX: Define periods dynamically from the actual data
+        periods = [s["Period"] for s in self.parent.current_schedule]
         
         # Cost per period
         dp_costs = [s["Cost"] for s in self.parent.current_schedule]
@@ -135,6 +145,7 @@ class PlotManager:
         ax1.set_xlabel('Period')
         ax1.set_ylabel('Cost ($)')
         ax1.set_title('Cost Per Period Comparison')
+        ax1.set_xticks(periods)
         ax1.legend()
         ax1.grid(True, alpha=0.3)
         
@@ -147,6 +158,7 @@ class PlotManager:
         ax2.set_xlabel('Period')
         ax2.set_ylabel('Cumulative Cost ($)')
         ax2.set_title('Cumulative Cost Comparison')
+        ax2.set_xticks(periods)
         ax2.legend()
         ax2.grid(True, alpha=0.3)
         
@@ -170,7 +182,7 @@ class PlotManager:
         # Summary metrics
         metrics = ['Total Cost', 'Num Orders', 'Emergencies']
         dp_metrics = [
-            self.parent.current_cost / 100,
+            self.parent.current_cost / 100, # Keeping your scaling logic
             sum(1 for s in self.parent.current_schedule if s["Order"] > 0),
             sum(1 for s in self.parent.current_schedule if s["Emergency"] > 0)
         ]
@@ -180,12 +192,12 @@ class PlotManager:
             sum(1 for s in self.parent.greedy_schedule if s["Emergency"] > 0)
         ]
         
-        x = np.arange(len(metrics))
-        ax4.bar(x - width/2, dp_metrics, width, label='DP', alpha=0.8)
-        ax4.bar(x + width/2, greedy_metrics, width, label='Greedy', alpha=0.8)
-        ax4.set_ylabel('Value')
+        x_metrics = np.arange(len(metrics))
+        ax4.bar(x_metrics - width/2, dp_metrics, width, label='DP', alpha=0.8)
+        ax4.bar(x_metrics + width/2, greedy_metrics, width, label='Greedy', alpha=0.8)
+        ax4.set_ylabel('Value (Cost Scaled /100)')
         ax4.set_title('Overall Metrics Comparison')
-        ax4.set_xticks(x)
+        ax4.set_xticks(x_metrics)
         ax4.set_xticklabels(metrics)
         ax4.legend()
         ax4.grid(True, alpha=0.3, axis='y')

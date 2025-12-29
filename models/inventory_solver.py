@@ -38,16 +38,18 @@ class InventoryDPSolver:
         return self.c_storage * n
 
     def solve(self):
-            """Solve using Dynamic Programming."""
+            """
+            Solve using Dynamic Programming.
+            Logic: Backward induction with 'Receiving Limit' constraint.
+            """
             INF = float('inf')
-            # Initialize DP table with infinity; this helps identify unreachable states later
             self.dp = np.full((self.T + 1, self.max_storage + 1), INF)
             self.decision = np.zeros((self.T + 1, self.max_storage + 1), dtype=int)
             
-            # Terminal condition: After time T, there are no future costs
+            # Terminal condition
             self.dp[self.T, :] = 0
 
-            # Backward induction: Solve from period T-1 down to 0
+            # Backward induction
             for t in range(self.T - 1, -1, -1):
                 current_demand = self.demand[t]
 
@@ -55,21 +57,21 @@ class InventoryDPSolver:
                     best = INF
                     best_q = 0
                     
-                    # Instead of hard-capping (I + q <= max_storage), I expanded the search space.
-                    # We can physically receive a large order (throughput) as long as we sell 
-                    # enough to fit the remainder in storage overnight.
-                    # So, max possible order is Demand + Space Available.
-                    max_order = current_demand + self.max_storage - I
+                    # LOGIC:
+                    # 1. Theoretical Max: We can order enough to meet demand + fill storage.
+                    # 2. Physical Limit: We cannot receive more than 'max_storage' in one shipment.
                     
-                    # Sanity check to ensure range doesn't break if I > Demand + Max
-                    max_order = max(0, max_order)
+                    theoretical_max = current_demand + self.max_storage - I
+                    receiving_limit = self.max_storage
+                    
+                    # The actual limit is the stricter of the two
+                    max_q = min(theoretical_max, receiving_limit)
+                    max_q = max(0, max_q) # Safety check
 
-                    for q in range(max_order + 1):
+                    for q in range(max_q + 1):
                         cost, nxt = self._period_cost(I, q, t)
                         
-                        # critical constraint here:
-                        # The storage limit applies to 'nxt' (Ending Inventory).
-                        # If the leftover stock exceeds capacity, this path is impossible.
+                        # CONSTRAINT: Ending inventory must fit in storage
                         if nxt > self.max_storage:
                             continue
                         
@@ -134,16 +136,36 @@ class InventoryDPSolver:
         return schedule, self.dp[0, self.initial_inventory]
 
     def solve_greedy(self):
-        """Greedy baseline: Order exactly the demand each period."""
+        """
+        Greedy baseline: Orders to meet demand, respecting Receiving Limit.
+        Logic: Try to meet demand 'd'. If 'd' is huge, order max possible (Receiving Limit)
+        and pay emergency for the rest.
+        """
         schedule = []
         total_cost = 0
         I = self.initial_inventory
         
         for t in range(self.T):
             d = self.demand[t]
-            q = min(d, self.max_storage - I)
-            inv = I + q
             
+            # Step 1: Calculate target order (just enough to meet demand)
+            target = max(0, d - I)
+            
+            # Step 2: Apply Receiving Limit (Constraint A)
+            # We cannot order more than max_storage in one go
+            q = min(target, self.max_storage)
+            
+            # Step 3: Apply Ending Storage Check (Constraint B)
+            # (Rarely needed for Greedy, but checks if I + q - d > max_storage)
+            # If we have excess inventory start, we might overshoot.
+            max_allowed_for_storage = self.max_storage + d - I
+            q = min(q, max_allowed_for_storage)
+            
+            # Final safe non-negative check
+            q = max(0, q)
+            
+            # Calculate costs
+            inv = I + q
             cost = self.normal_order_cost(q)
             
             if inv >= d:

@@ -102,15 +102,16 @@ Try these to validate behavior:
 3. **Initial Inventory > Max Storage:** Algorithm should Raise Error in Terminal
 4. **Extremely Low Max Capacity:** Frequent emergency orders
 5. **High Order Fixed Cost:** DP batches orders to reduce frequency
-6. **High Emergency Cost @max_capacity > Highest Demand:** DP anticipates spikes, avoids emergencies
+6. **High Emergency Cost:** DP anticipates spikes, avoids emergencies
 
 > Placeholder: Add figures showing DP vs. Greedy for these cases
 > ![1. Zero Demand](./plots/ZeroDemand_DPvsGreedy.png)
 > ![2. Demand Exceeds Max Capacity](./plots/DemandExceedsMaxCap_DPvsGreedy.png)
 > ![3. ](./plots/InventoryGreaterThanMaxCap.png)
-> ![4. ](./plots/LowMaxCap_DPvsGreeedy.png)
-> ![5. ](./plots/HighOrderCost_DPvsGreedy.png)
-> ![6. ](./plots/)
+> ![4. Extremely Low Max Capacity](./plots/LowMaxCap_DPvsGreeedy.png)
+> ![5. High Order Fixed Cost](./plots/HighOrderCost_DPvsGreedy.png)
+> ![6. High Emergency Cost](./plots/HighEmergency.png)
+> ![High Emergency Table](./plots/HighEmergency_DPvsGreedyTable.png)
 
 ---
 

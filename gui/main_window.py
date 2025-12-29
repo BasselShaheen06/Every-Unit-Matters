@@ -8,8 +8,7 @@ from gui.tabs.comparison_tab import ComparisonTab
 from gui.widgets.plot_manager import PlotManager
 from Utils.constant import (
     WINDOW_WIDTH,
-    WINDOW_HEIGHT,
-    T
+    WINDOW_HEIGHT
 )
 
 class InventoryGUI(tk.Tk):
@@ -27,8 +26,12 @@ class InventoryGUI(tk.Tk):
         self.solver = None
         self.greedy_schedule = None
         self.greedy_cost = None
+        
+        # Current Time Horizon
+        self.current_T = None 
 
         # Widget references
+        self.t_entry = None
         self.demand_entry = None
         self.init_inv = None
         self.c_order_fixed = None
@@ -42,8 +45,11 @@ class InventoryGUI(tk.Tk):
         self.dp_tree = None
         self.decision_tree = None
         self.comparison_text = None
+        
+        # Comparison Tables
         self.dp_comparison_table = None
         self.greedy_comparison_table = None
+        self.diff_comparison_table = None  # NEW: For difference table
 
         # Initialize plot manager
         self.plot_manager = PlotManager(self)
@@ -66,11 +72,23 @@ class InventoryGUI(tk.Tk):
     
     def run_solver(self):
         """Main solver orchestration."""
-        # Parse inputs
         try:
+            # 1. Get Time Horizon T
+            t_val = int(self.t_entry.get())
+            if t_val <= 0:
+                raise ValueError("Time Horizon (T) must be positive.")
+
+            # 2. Get Demand
             demand = list(map(int, self.demand_entry.get().split(",")))
-            if len(demand) != T:
-                raise ValueError(f"Demand must have {T} values")
+            
+            # 3. Validate Length
+            if len(demand) != t_val:
+                raise ValueError(
+                    f"Mismatch!\n"
+                    f"Time Horizon T = {t_val}\n"
+                    f"Demand Entries = {len(demand)}\n\n"
+                    f"Please provide exactly {t_val} demand values."
+                )
 
             init_inv = int(self.init_inv.get())
             c_order_fixed = float(self.c_order_fixed.get())
@@ -80,13 +98,16 @@ class InventoryGUI(tk.Tk):
             c_emergency_unit = float(self.c_emergency_unit.get())
             max_storage = int(self.max_storage.get())
 
+        except ValueError as ve:
+            messagebox.showerror("Input Error", str(ve))
+            return
         except Exception as e:
-            messagebox.showerror("Input Error", str(e))
+            messagebox.showerror("Unexpected Error", str(e))
             return
 
-        # Create and solve
+        # Solve with dynamic T
         solver = InventoryDPSolver(
-            T, demand, max_storage, init_inv,
+            t_val, demand, max_storage, init_inv,
             c_order_fixed, c_unit, c_storage,
             c_emergency_fixed, c_emergency_unit
         )
@@ -96,6 +117,7 @@ class InventoryGUI(tk.Tk):
         greedy_schedule, greedy_cost = solver.solve_greedy()
 
         # Update state
+        self.current_T = t_val
         self.current_demand = demand
         self.current_schedule = schedule
         self.current_cost = cost
@@ -106,6 +128,8 @@ class InventoryGUI(tk.Tk):
         # Update displays
         self.update_main_table(schedule, cost, demand)
         self.dp_viz_tab.display_tables(solver)
+        
+        # Pass data to the new Comparison Tab method
         self.comparison_tab.display_comparison(
             schedule, cost, greedy_schedule, greedy_cost
         )
