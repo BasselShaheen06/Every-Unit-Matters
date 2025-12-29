@@ -112,7 +112,9 @@ class MainTab:
 
             # 3. Validate Initial Inventory (Integer, Negative Allowed)
             try:
-                int(self.gui.init_inv.get())
+                inv = int(self.gui.init_inv.get())
+                if inv < 0:
+                    raise ValueError
             except ValueError:
                 raise ValueError("Initial Inventory must be an integer.")
 
