@@ -10,9 +10,11 @@ from Utils.constant import (
     DEFAULT_EMERGENCY_FIXED,
     DEFAULT_EMERGENCY_UNIT,
     DEFAULT_MAX_STORAGE,
-    SCHEDULE_COLUMNS,
-    T as DEFAULT_T
+    SCHEDULE_COLUMNS
 )
+
+# Explicitly restoring T to 12 as requested
+T = 12
 
 class MainTab:
     """Main optimization tab."""
@@ -30,120 +32,118 @@ class MainTab:
         self.build_plots()
     
     def build_inputs(self):
+        """
+        Builds input fields matching the layout of the reference code:
+        Demand -> Init Inv -> Button -> Costs -> Max Storage
+        """
         frame = ttk.LabelFrame(self.frame, text="Inputs")
         frame.pack(fill="x", padx=10, pady=5)
 
-        # Time Horizon T
-        ttk.Label(frame, text="Time Horizon (T):").grid(row=0, column=0, sticky="w")
-        self.gui.t_entry = ttk.Entry(frame, width=10)
-        self.gui.t_entry.insert(0, str(DEFAULT_T))
-        self.gui.t_entry.grid(row=0, column=1, sticky="w")
-
-        # Demand
-        ttk.Label(frame, text="Demand Sequence:").grid(row=1, column=0, sticky="w")
+        # --- Row 0: Demand ---
+        ttk.Label(frame, text=f"Demand ({T} months):").grid(row=0, column=0, sticky="w")
         self.gui.demand_entry = ttk.Entry(frame, width=80)
         self.gui.demand_entry.insert(0, DEFAULT_DEMAND)
-        self.gui.demand_entry.grid(row=1, column=1, padx=5)
+        self.gui.demand_entry.grid(row=0, column=1, padx=5, sticky="w")
 
-        # Initial Inventory
-        ttk.Label(frame, text="Initial Inventory:").grid(row=2, column=0, sticky="w")
+        # --- Row 1: Initial Inventory ---
+        ttk.Label(frame, text="Initial Inventory:").grid(row=1, column=0, sticky="w")
         self.gui.init_inv = ttk.Entry(frame, width=10)
         self.gui.init_inv.insert(0, str(DEFAULT_INITIAL_INVENTORY))
-        self.gui.init_inv.grid(row=2, column=1, sticky="w")
+        self.gui.init_inv.grid(row=1, column=1, sticky="w")
 
-        # Run Button (CHANGED command to validate_and_run)
+        # --- Row 2: Run Button ---
         ttk.Button(frame, text="Run Optimization", command=self.validate_and_run)\
-            .grid(row=3, column=1, sticky="w", pady=5)
+            .grid(row=2, column=1, sticky="w", pady=5)
 
-        # Costs
-        ttk.Label(frame, text="Ordering Fixed Cost:").grid(row=4, column=0, sticky="w")
+        # --- Row 3: Ordering Fixed Cost ---
+        ttk.Label(frame, text="Ordering Fixed Cost:").grid(row=3, column=0, sticky="w")
         self.gui.c_order_fixed = ttk.Entry(frame, width=10)
         self.gui.c_order_fixed.insert(0, str(DEFAULT_ORDER_FIXED))
-        self.gui.c_order_fixed.grid(row=4, column=1, sticky="w")
+        self.gui.c_order_fixed.grid(row=3, column=1, sticky="w")
 
-        ttk.Label(frame, text="Ordering Unit Cost:").grid(row=5, column=0, sticky="w")
+        # --- Row 4: Ordering Unit Cost ---
+        ttk.Label(frame, text="Ordering Unit Cost:").grid(row=4, column=0, sticky="w")
         self.gui.c_unit = ttk.Entry(frame, width=10)
         self.gui.c_unit.insert(0, str(DEFAULT_UNIT_COST))
-        self.gui.c_unit.grid(row=5, column=1, sticky="w")
+        self.gui.c_unit.grid(row=4, column=1, sticky="w")
 
-        ttk.Label(frame, text="Storage Cost / Unit:").grid(row=6, column=0, sticky="w")
+        # --- Row 5: Storage Cost ---
+        ttk.Label(frame, text="Storage Cost / Unit:").grid(row=5, column=0, sticky="w")
         self.gui.c_storage = ttk.Entry(frame, width=10)
         self.gui.c_storage.insert(0, str(DEFAULT_STORAGE_COST))
-        self.gui.c_storage.grid(row=6, column=1, sticky="w")
+        self.gui.c_storage.grid(row=5, column=1, sticky="w")
 
-        ttk.Label(frame, text="Emergency Fixed Cost:").grid(row=7, column=0, sticky="w")
+        # --- Row 6: Emergency Fixed Cost ---
+        ttk.Label(frame, text="Emergency Fixed Cost:").grid(row=6, column=0, sticky="w")
         self.gui.c_emergency_fixed = ttk.Entry(frame, width=10)
         self.gui.c_emergency_fixed.insert(0, str(DEFAULT_EMERGENCY_FIXED))
-        self.gui.c_emergency_fixed.grid(row=7, column=1, sticky="w")
+        self.gui.c_emergency_fixed.grid(row=6, column=1, sticky="w")
 
-        ttk.Label(frame, text="Emergency Unit Cost:").grid(row=8, column=0, sticky="w")
+        # --- Row 7: Emergency Unit Cost ---
+        ttk.Label(frame, text="Emergency Unit Cost:").grid(row=7, column=0, sticky="w")
         self.gui.c_emergency_unit = ttk.Entry(frame, width=10)
         self.gui.c_emergency_unit.insert(0, str(DEFAULT_EMERGENCY_UNIT))
-        self.gui.c_emergency_unit.grid(row=8, column=1, sticky="w")
+        self.gui.c_emergency_unit.grid(row=7, column=1, sticky="w")
 
-        ttk.Label(frame, text="Max Storage Capacity:").grid(row=9, column=0, sticky="w")
+        # --- Row 8: Max Storage Capacity ---
+        ttk.Label(frame, text="Max Storage Capacity:").grid(row=8, column=0, sticky="w")
         self.gui.max_storage = ttk.Entry(frame, width=10)
         self.gui.max_storage.insert(0, str(DEFAULT_MAX_STORAGE))
-        self.gui.max_storage.grid(row=9, column=1, sticky="w")
+        self.gui.max_storage.grid(row=8, column=1, sticky="w")
     
     def validate_and_run(self):
-        """Validates all inputs before running the solver."""
+        """
+        Validates inputs matching the logic from the reference code.
+        Strictly enforces that demand length is T (12) and values are non-negative.
+        """
         try:
-            # 1. Validate Time Horizon (Positive Integer)
+            # 1. Parse Demand
             try:
-                t_val = int(self.gui.t_entry.get())
-                if t_val <= 0:
-                    raise ValueError
+                raw_text = self.gui.demand_entry.get().split(',')
+                # Filter out empty strings from trailing commas
+                demands = [int(x.strip()) for x in raw_text if x.strip()]
             except ValueError:
-                raise ValueError("Time Horizon (T) must be a positive integer.")
+                raise ValueError("Demand must be a comma-separated list of integers.")
 
-            # 2. Validate Demand (List of Non-Negative Integers)
-            try:
-                demands = [int(x.strip()) for x in self.gui.demand_entry.get().split(',')]
-                if any(d < 0 for d in demands):
-                    raise ValueError("Demand values cannot be negative.")
-                
-                if len(demands) != t_val:
-                    raise ValueError(f"Demand count ({len(demands)}) does not match Time Horizon T ({t_val}).")
-            except ValueError as e:
-                if "invalid literal" in str(e):
-                    raise ValueError("Demand must be a comma-separated list of integers.")
-                raise e
+            # 2. Strict Check: Demand length must be exactly T (12)
+            if len(demands) != T:
+                raise ValueError(f"Demand must have exactly {T} values (you provided {len(demands)}).")
 
-            # 3. Validate Initial Inventory (Integer, Negative Allowed)
+            # 3. Strict Check: Negative Demand
+            if any(d < 0 for d in demands):
+                raise ValueError("Demand values cannot be negative.")
+
+            # 4. Validate Initial Inventory
             try:
                 inv = int(self.gui.init_inv.get())
                 if inv < 0:
-                    raise ValueError
+                     raise ValueError("Initial Inventory cannot be negative.")
             except ValueError:
-                raise ValueError("Initial Inventory must be an integer.")
+                raise ValueError("Initial Inventory must be a valid integer.")
 
-            # 4. Validate Costs (Non-Negative Floats)
-            cost_inputs = [
-                (self.gui.c_order_fixed, "Ordering Fixed Cost"),
-                (self.gui.c_unit, "Ordering Unit Cost"),
-                (self.gui.c_storage, "Storage Cost"),
-                (self.gui.c_emergency_fixed, "Emergency Fixed Cost"),
-                (self.gui.c_emergency_unit, "Emergency Unit Cost")
+            # 5. Validate Costs (Floats) and Max Storage (Int)
+            inputs_to_check = [
+                (self.gui.c_order_fixed, "Ordering Fixed Cost", float),
+                (self.gui.c_unit, "Ordering Unit Cost", float),
+                (self.gui.c_storage, "Storage Cost", float),
+                (self.gui.c_emergency_fixed, "Emergency Fixed Cost", float),
+                (self.gui.c_emergency_unit, "Emergency Unit Cost", float),
+                (self.gui.max_storage, "Max Storage Capacity", int)
             ]
 
-            for entry, name in cost_inputs:
+            for entry, name, type_func in inputs_to_check:
                 try:
-                    val = float(entry.get())
+                    val = type_func(entry.get())
                     if val < 0:
                         raise ValueError(f"{name} cannot be negative.")
                 except ValueError:
                     raise ValueError(f"{name} must be a valid number.")
 
-            # 5. Validate Max Storage (Positive Integer)
-            try:
-                ms = int(self.gui.max_storage.get())
-                if ms <= 0:
-                    raise ValueError
-            except ValueError:
-                raise ValueError("Max Storage Capacity must be a positive integer.")
-
-            # If all validations pass, run the solver
+            # ------------------------------------
+            # Validation Passed
+            # Pass T=12 into the main GUI context for the solver to use
+            # ------------------------------------
+            self.gui.current_t = T
             self.gui.run_solver()
 
         except ValueError as ve:
@@ -173,15 +173,15 @@ class MainTab:
         frame.pack(fill="x", padx=10, pady=5)
 
         ttk.Button(frame, text="Plot Demand", 
-                  command=self.gui.plot_manager.plot_demand).pack(side="left", padx=5)
+                   command=self.gui.plot_manager.plot_demand).pack(side="left", padx=5)
         ttk.Button(frame, text="Plot Inventory", 
-                  command=self.gui.plot_manager.plot_inventory).pack(side="left", padx=5)
+                   command=self.gui.plot_manager.plot_inventory).pack(side="left", padx=5)
         ttk.Button(frame, text="Plot Emergencies", 
-                  command=self.gui.plot_manager.plot_emergency).pack(side="left", padx=5)
+                   command=self.gui.plot_manager.plot_emergency).pack(side="left", padx=5)
         ttk.Button(frame, text="Plot Costs", 
-                  command=self.gui.plot_manager.plot_costs).pack(side="left", padx=5)
+                   command=self.gui.plot_manager.plot_costs).pack(side="left", padx=5)
         ttk.Button(frame, text="Show Backtracking", 
-                  command=self.gui.plot_manager.show_backtracking).pack(side="left", padx=5)
+                   command=self.gui.plot_manager.show_backtracking).pack(side="left", padx=5)
     
     def get_frame(self):
         return self.frame

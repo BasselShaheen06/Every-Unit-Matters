@@ -1,7 +1,3 @@
-## Here we designed some test cases that may or may not push our algorithm to bad behavior
-## in some of them we observed that DP & Greedy act the same, and this mainly depends on initial
-## inventory levels or our Max Capacity, in other the DP shows significant optimization
-
 # Edge Case 1: Zero Demand
 T: 12
 InitialInventory: 0
@@ -14,7 +10,7 @@ EmergencyUnitCost: 60
 DemandSequence: 0,0,0,0,0,0,0,0,0,0,0,0
 
 # How our Algorithm should behave?
-# No regular orders; inventory remains zero; no emergency orders.
+# No orders should be placed; Inventory remains zero; Cost should be 0 (or minimal fixed costs).
 
 --------------------------------------------------------
 
@@ -30,12 +26,11 @@ EmergencyUnitCost: 60
 DemandSequence: 80,120,600,90,150,130,110,140,100,120,90,110
 
 # How our Algorithm should behave?
-# DP places max regular order (500); remaining demand covered by emergency order.
-# Greedy triggers even more emergency orders if not anticipating spike.
+# Spike of 600 > Capacity 500. DP must maximize regular order and use emergency for the rest.
 
 --------------------------------------------------------
 
-# Edge Case 3: Initial Inventory Exceeds Max Capacity
+# Edge Case 3: Initial Inventory Exceeds Capacity
 T: 12
 InitialInventory: 600
 MaxCapacity: 500
@@ -47,7 +42,7 @@ EmergencyUnitCost: 60
 DemandSequence: 80,120,100,90,150,130,110,140,100,120,90,110
 
 # How our Algorithm should behave?
-# Algorithm should cap inventory at 500 or raise warning/error.
+# Invalid state. Algorithm should raise a ValueError.
 
 --------------------------------------------------------
 
@@ -63,7 +58,7 @@ EmergencyUnitCost: 60
 DemandSequence: 80,120,100,90,150,130,110,140,100,120,90,110
 
 # How our Algorithm should behave?
-# Frequent emergency orders unavoidable; DP tries to minimize total cost while respecting capacity.
+# Capacity 50 forces frequent emergency orders. DP minimizes costs within tight constraints.
 
 --------------------------------------------------------
 
@@ -79,7 +74,7 @@ EmergencyUnitCost: 60
 DemandSequence: 80,120,100,90,150,130,110,140,100,120,90,110
 
 # How our Algorithm should behave?
-# DP avoids accumulating inventory; orders just-in-time to minimize holding costs.
+# Storage cost is high ($50/unit). DP should behave like 'Just-In-Time' (Zero inventory).
 
 --------------------------------------------------------
 
@@ -95,7 +90,7 @@ EmergencyUnitCost: 60
 DemandSequence: 80,120,100,90,150,130,110,140,100,120,90,110
 
 # How our Algorithm should behave?
-# DP batches orders into fewer periods to reduce fixed costs; holding cost may increase slightly.
+# Fixed cost $1000. DP should batch orders (order large amounts less frequently).
 
 --------------------------------------------------------
 
@@ -106,18 +101,16 @@ MaxCapacity: 100
 OrderFixedCost: 50
 OrderUnitCost: 5
 StorageCostPerUnit: 1
-EmergencyFixedCost: 1000  
+EmergencyFixedCost: 1000
 EmergencyUnitCost: 500
-DemandSequence: 30, 40, 160, 20, 70, 180, 10, 50, 30, 80, 20, 60
+DemandSequence: 30,40,160,20,70,180,10,50,30,80,20,60
 
 # How our Algorithm should behave?
-# - DP pre-orders in months 1–2 to build inventory for months with spikes (month 3: 160, month 6: 180), staying within MaxCapacity.
-# - Greedy orders exactly demand each month → cannot accumulate enough stock before spikes → triggers expensive emergency orders in months 3 and 6.
-# - Total cost for DP < Greedy due to avoided emergency orders.
+# DP anticipates spikes in Month 3 & 6. Greedy fails to prepare and pays huge emergency costs.
 
 --------------------------------------------------------
 
-# Edge Case 8: Zero/Negative Costs
+# Edge Case 8: Zero Costs
 T: 12
 InitialInventory: 0
 MaxCapacity: 500
@@ -129,5 +122,84 @@ EmergencyUnitCost: 0
 DemandSequence: 80,120,100,90,150,130,110,140,100,120,90,110
 
 # How our Algorithm should behave?
-# DP should still produce a valid schedule; total cost is zero; ensures no errors occur in degenerate cost cases.
-# DP and Greedy behave the same
+# All costs zero. Should run without math errors. DP and Greedy behave same.
+
+--------------------------------------------------------
+
+# Test Case 9: Standard Baseline
+T: 12
+InitialInventory: 0
+MaxCapacity: 500
+OrderFixedCost: 100
+OrderUnitCost: 10
+StorageCostPerUnit: 2
+EmergencyFixedCost: 150
+EmergencyUnitCost: 60
+DemandSequence: 80,120,100,90,150,130,110,140,100,120,90,110
+
+# How our Algorithm should behave?
+# Standard scenario. DP and Greedy likely similar as orders roughly match demand.
+
+--------------------------------------------------------
+
+# Test Case 10: Non-zero Initial Inventory
+T: 12
+InitialInventory: 150
+MaxCapacity: 500
+OrderFixedCost: 100
+OrderUnitCost: 10
+StorageCostPerUnit: 2
+EmergencyFixedCost: 150
+EmergencyUnitCost: 60
+DemandSequence: 80,120,100,90,150,130,110,140,100,120,90,110
+
+# How our Algorithm should behave?
+# DP uses initial stock efficiently. Greedy blindly reacts.
+
+--------------------------------------------------------
+
+# Test Case 11: High-low Swing
+T: 12
+InitialInventory: 50
+MaxCapacity: 500
+OrderFixedCost: 100
+OrderUnitCost: 10
+StorageCostPerUnit: 2
+EmergencyFixedCost: 150
+EmergencyUnitCost: 60
+DemandSequence: 150,50,140,60,130,70,120,80,110,90,100,100
+
+# How our Algorithm should behave?
+# Volatile demand. DP smooths orders; Greedy triggers emergency during spikes.
+
+--------------------------------------------------------
+
+# Test Case 12: Emergency Scenario
+T: 12
+InitialInventory: 0
+MaxCapacity: 200
+OrderFixedCost: 100
+OrderUnitCost: 10
+StorageCostPerUnit: 2
+EmergencyFixedCost: 150
+EmergencyUnitCost: 60
+DemandSequence: 80,120,250,90,150,130,110,140,100,120,90,110
+
+# How our Algorithm should behave?
+# Capacity 200 vs Spike 250. Unavoidable emergency. DP minimizes impact.
+
+--------------------------------------------------------
+
+# Test Case 13: The Impossible Bottleneck
+T: 3
+InitialInventory: 0
+MaxCapacity: 10
+OrderFixedCost: 100
+OrderUnitCost: 10
+StorageCostPerUnit: 0.8
+EmergencyFixedCost: 1000
+EmergencyUnitCost: 500
+DemandSequence: 5,50,5
+
+# How our Algorithm should behave?
+# FORCED EMERGENCY. Tiny warehouse (10) vs Massive Spike (50). Planning ahead is physically impossible.
