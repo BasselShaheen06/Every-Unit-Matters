@@ -154,10 +154,10 @@ Educational project for **Operations Research and Healthcare Inventory Optimizat
 ---
 ## Acknowledgement 🙏🏻
 * I would like to thank the whole team for their great work:
-Thanks to @Mohamed0Ehab & @WardSalkini and @AboSaree for building the core functionalities for this project, brainstorming different structures, late-night work that brought this thing to reality
-Special Thanks to my mate @Kareem-Taha-05 who always viewed things at micro-scale, whenever we are stuck he was the guy with the skillset to help
+Thanks to [Mohamed0Ehab](https://github.com/Mohamed0Ehab) & [WardSalkini](https://github.com/WardSalkini) and [AboSaree](https://github.com/AboSaree) for building the core functionalities for this project, brainstorming different structures, late-night work that brought this thing to reality
+Special Thanks to my mate [Kareem Taha](https://github.com/Kareem-Taha-05) who always viewed things at micro-scale, whenever we are stuck he was the guy with the skillset to help
 
-Finally, I would like to thank Prof. Eman Ayman & Our TA Eng. @yaraelshamy for Supervising this project and their Mentorship Throughout the Course. 
+Finally, I would like to thank Prof. Eman Ayman & Our TA Eng. [yaraelshamy](https://github.com/yaraelshamy) for Supervising this project and their Mentorship Throughout the Course. 
 
 ---
 
