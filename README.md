@@ -129,7 +129,7 @@ Each schedule includes:
 > ![Inventory Trajectory Placeholder](./plots/InventoryTrajectory.png)
 
 > Placeholder: Cost breakdown plot
-> ![Cost Breakdown Placeholder](./plots/CostBreakdown.png)
+> ![Cost Breakdown Placeholder](./plots/CostBreakDown.png)
 
 ---
 
