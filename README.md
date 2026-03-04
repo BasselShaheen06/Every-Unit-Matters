@@ -132,7 +132,7 @@ Each schedule includes:
 
 ## Performance Notes 📋
 
-* Complexity: (O(T \cdot N \cdot U)) where
+* Complexity: ($$O(T \cdot N \cdot U)$$) where
 
   * (T) = periods, (N) = max inventory states, (U) = feasible order quantities
 * Tractable for moderate storage and periods
