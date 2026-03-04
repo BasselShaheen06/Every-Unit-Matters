@@ -40,7 +40,7 @@ For each month (t):
 
 1. **Regular Order Cost:** $$(C_{\text{order}} = c_\text{fixed} + c_\text{unit} \times q)$$
 2. **Storage Cost:** $$(C_{\text{holding}} = c_\text{storage} \times I_\text{end})$$
-3. **Emergency Cost:** $$(C_{emergency} = c_{emergency_fixed} + c_{emergency_unit} \times \text{shortage})$$
+3. **Emergency Cost:** $$(C_{emergency} = c_{emergency fixed} + c_{emergency unit} \times \text{shortage})$$
 
 **Inventory Dynamics:**
 $$I_{t+1} = \max(0, I_t + q_t - D_t)$$ 
