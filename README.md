@@ -126,10 +126,10 @@ Each schedule includes:
 | Cost      | Total cost this month                      |
 
 > Placeholder: Inventory trajectory plot
-> ![Inventory Trajectory Placeholder](./plots/inventory_trajectory.png)
+> ![Inventory Trajectory Placeholder](./plots/InventoryTrajectory.png)
 
 > Placeholder: Cost breakdown plot
-> ![Cost Breakdown Placeholder](./plots/cost_breakdown.png)
+> ![Cost Breakdown Placeholder](./plots/CostBreakdown.png)
 
 ---
 
