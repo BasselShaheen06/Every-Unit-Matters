@@ -39,15 +39,15 @@ We also implemented a **Greedy baseline** that orders exactly the current demand
 For each month (t):
 
 1. **Regular Order Cost:** $$(C_{\text{order}} = c_\text{fixed} + c_\text{unit} \times q)$$
-2. **Storage Cost:** (C_{\text{holding}} = c_\text{storage} \times I_\text{end})
-3. **Emergency Cost:** (C_{\text{emergency}} = c_\text{emergency_fixed} + c_\text{emergency_unit} \times \text{shortage})
+2. **Storage Cost:** $$(C_{\text{holding}} = c_\text{storage} \times I_\text{end})$$
+3. **Emergency Cost:** $$(C_{\text{emergency}} = c_\text{emergency_fixed} + c_\text{emergency_unit} \times \text{shortage})$$
 
 **Inventory Dynamics:**
-
+$$
 [
 I_{t+1} = \max(0, I_t + q_t - D_t)
 ]
-
+$$
 **Objective:** Minimize total cost over all months.
 
 ---
